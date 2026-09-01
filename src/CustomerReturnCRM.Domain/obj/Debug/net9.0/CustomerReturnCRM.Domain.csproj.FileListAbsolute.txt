@@ -1,0 +1,12 @@
+E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.Domain\bin\Debug\net9.0\CustomerReturnCRM.Domain.deps.json
+E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.Domain\bin\Debug\net9.0\CustomerReturnCRM.Domain.dll
+E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.Domain\bin\Debug\net9.0\CustomerReturnCRM.Domain.pdb
+E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.Domain\obj\Debug\net9.0\CustomerReturnCRM.Domain.GeneratedMSBuildEditorConfig.editorconfig
+E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.Domain\obj\Debug\net9.0\CustomerReturnCRM.Domain.AssemblyInfoInputs.cache
+E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.Domain\obj\Debug\net9.0\CustomerReturnCRM.Domain.AssemblyInfo.cs
+E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.Domain\obj\Debug\net9.0\CustomerReturnCRM.Domain.csproj.CoreCompileInputs.cache
+E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.Domain\obj\Debug\net9.0\CustomerReturnCRM.Domain.sourcelink.json
+E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.Domain\obj\Debug\net9.0\CustomerReturnCRM.Domain.dll
+E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.Domain\obj\Debug\net9.0\refint\CustomerReturnCRM.Domain.dll
+E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.Domain\obj\Debug\net9.0\CustomerReturnCRM.Domain.pdb
+E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.Domain\obj\Debug\net9.0\ref\CustomerReturnCRM.Domain.dll
