@@ -3,9 +3,11 @@ using CustomerReturnCRM.Application.CustomerManagement;
 using CustomerReturnCRM.Application.AppointmentManagement;
 using CustomerReturnCRM.Application.ServiceManagement;
 using CustomerReturnCRM.Application.VisitManagement;
+using CustomerReturnCRM.Application.Authentication;
 using CustomerReturnCRM.Infrastructure.CustomerManagement;
 using CustomerReturnCRM.Infrastructure.AppointmentManagement;
 using CustomerReturnCRM.Infrastructure.BusinessSetup;
+using CustomerReturnCRM.Infrastructure.Authentication;
 using CustomerReturnCRM.Infrastructure.Identity;
 using CustomerReturnCRM.Infrastructure.Persistence;
 using CustomerReturnCRM.Infrastructure.ServiceManagement;
@@ -28,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IAppointmentManagementService, AppointmentManagementService>();
         services.AddScoped<IServiceManagementService, ServiceManagementService>();
         services.AddScoped<IVisitManagementService, VisitManagementService>();
+        services.AddScoped<IAuthenticationService, AuthenticationService>();
 
         services.AddIdentityCore<ApplicationUser>(options =>
             {

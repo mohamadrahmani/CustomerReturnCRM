@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using CustomerReturnCRM.Application.AppointmentManagement;
+using CustomerReturnCRM.Application.VisitManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -53,6 +54,43 @@ public sealed class AppointmentsController : ControllerBase
         try { var result = await service.CancelAsync(businessId, appointmentId, userId, cancellationToken); return result is null ? NotFound() : Ok(result); }
         catch (InvalidOperationException exception) { return Conflict(new { error = exception.Message }); }
         catch (UnauthorizedAccessException) { return Forbid(); }
+    }
+
+    [HttpPost("{appointmentId:guid}/complete")]
+    public async Task<ActionResult<VisitResult>> Complete(
+        Guid businessId,
+        Guid appointmentId,
+        CompleteAppointmentRequest request,
+        [FromServices] IVisitManagementService service,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var result = await service.CompleteAppointmentAsync(
+                businessId,
+                appointmentId,
+                userId,
+                request,
+                cancellationToken);
+            return result is null ? NotFound() : StatusCode(StatusCodes.Status201Created, result);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new { error = exception.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
     }
 
     private bool TryGetUserId(out Guid userId) => Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub"), out userId);
