@@ -1,5 +1,15 @@
-﻿using CustomerReturnCRM.Infrastructure.Identity;
+﻿using CustomerReturnCRM.Application.BusinessSetup;
+using CustomerReturnCRM.Application.CustomerManagement;
+using CustomerReturnCRM.Application.AppointmentManagement;
+using CustomerReturnCRM.Application.ServiceManagement;
+using CustomerReturnCRM.Application.VisitManagement;
+using CustomerReturnCRM.Infrastructure.CustomerManagement;
+using CustomerReturnCRM.Infrastructure.AppointmentManagement;
+using CustomerReturnCRM.Infrastructure.BusinessSetup;
+using CustomerReturnCRM.Infrastructure.Identity;
 using CustomerReturnCRM.Infrastructure.Persistence;
+using CustomerReturnCRM.Infrastructure.ServiceManagement;
+using CustomerReturnCRM.Infrastructure.VisitManagement;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -13,6 +23,12 @@ public static class DependencyInjection
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found.");
         services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+        services.AddScoped<IBusinessSetupService, BusinessSetupService>();
+        services.AddScoped<ICustomerManagementService, CustomerManagementService>();
+        services.AddScoped<IAppointmentManagementService, AppointmentManagementService>();
+        services.AddScoped<IServiceManagementService, ServiceManagementService>();
+        services.AddScoped<IVisitManagementService, VisitManagementService>();
+
         services.AddIdentityCore<ApplicationUser>(options =>
             {
                 options.User.RequireUniqueEmail = true;
@@ -24,5 +40,9 @@ public static class DependencyInjection
         return services;
     }
 }
+
+
+
+
 
 

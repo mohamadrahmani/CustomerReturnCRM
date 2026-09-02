@@ -11,6 +11,13 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
     public DbSet<Business> Businesses => Set<Business>();
     public DbSet<BusinessMember> BusinessMembers => Set<BusinessMember>();
+    public DbSet<Staff> Staff => Set<Staff>();
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Service> Services => Set<Service>();
+    public DbSet<Appointment> Appointments => Set<Appointment>();
+    public DbSet<AppointmentService> AppointmentServices => Set<AppointmentService>();
+    public DbSet<Visit> Visits => Set<Visit>();
+    public DbSet<VisitService> VisitServices => Set<VisitService>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -29,6 +36,20 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
             entity.HasIndex(x => x.Mobile);
         });
 
+        builder.Entity<Staff>(entity =>
+        {
+            entity.ToTable("Staff");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.FirstName).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.LastName).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Mobile).HasMaxLength(30);
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.HasIndex(x => x.BusinessId);
+            entity.HasIndex(x => x.UserId);
+            entity.HasOne(x => x.Business).WithMany(x => x.Staff).HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ApplicationUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
         builder.Entity<BusinessMember>(entity =>
         {
             entity.ToTable("BusinessMembers");
@@ -39,5 +60,89 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
             entity.HasOne(x => x.Business).WithMany(x => x.Members).HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<ApplicationUser>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
         });
+
+        builder.Entity<Customer>(entity =>
+        {
+            entity.ToTable("Customers");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.FirstName).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.LastName).HasMaxLength(100);
+            entity.Property(x => x.Mobile).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.Note).HasMaxLength(1000);
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.HasIndex(x => new { x.BusinessId, x.Mobile }).IsUnique();
+            entity.HasOne(x => x.Business).WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Service>(entity =>
+        {
+            entity.ToTable("Services");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(1000);
+            entity.Property(x => x.DefaultPrice).HasPrecision(18, 2);
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.HasIndex(x => new { x.BusinessId, x.Title }).IsUnique();
+            entity.HasOne(x => x.Business).WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Appointment>(entity =>
+        {
+            entity.ToTable("Appointments");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
+            entity.Property(x => x.Note).HasMaxLength(1000);
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.HasIndex(x => new { x.BusinessId, x.StartAt });
+            entity.HasIndex(x => new { x.BusinessId, x.CustomerId, x.StartAt });
+            entity.HasOne(x => x.Business).WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<AppointmentService>(entity =>
+        {
+            entity.ToTable("AppointmentServices");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ServiceTitle).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Price).HasPrecision(18, 2);
+            entity.Property(x => x.DurationMinutes).IsRequired();
+            entity.HasIndex(x => x.AppointmentId);
+            entity.HasIndex(x => x.ServiceId);
+            entity.HasIndex(x => x.StaffId);
+            entity.HasOne(x => x.Appointment).WithMany(x => x.AppointmentServices).HasForeignKey(x => x.AppointmentId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Service).WithMany().HasForeignKey(x => x.ServiceId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Staff).WithMany().HasForeignKey(x => x.StaffId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Visit>(entity =>
+        {
+            entity.ToTable("Visits");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.TotalAmount).HasPrecision(18, 2);
+            entity.Property(x => x.Note).HasMaxLength(1000);
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.HasIndex(x => new { x.BusinessId, x.VisitAt });
+            entity.HasIndex(x => new { x.BusinessId, x.CustomerId, x.VisitAt });
+            entity.HasOne(x => x.Business).WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Appointment).WithMany().HasForeignKey(x => x.AppointmentId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<VisitService>(entity =>
+        {
+            entity.ToTable("VisitServices");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.ServiceTitle).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Price).HasPrecision(18, 2);
+            entity.Property(x => x.DurationMinutes).IsRequired();
+            entity.HasIndex(x => x.VisitId);
+            entity.HasIndex(x => x.ServiceId);
+            entity.HasIndex(x => x.StaffId);
+            entity.HasOne(x => x.Visit).WithMany(x => x.VisitServices).HasForeignKey(x => x.VisitId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Service).WithMany().HasForeignKey(x => x.ServiceId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Staff).WithMany().HasForeignKey(x => x.StaffId).OnDelete(DeleteBehavior.Restrict);
+        });
     }
 }
+
+

@@ -4,6 +4,7 @@ using CustomerReturnCRM.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260901144709_AddStaffAndBusinessSetup")]
+    partial class AddStaffAndBusinessSetup
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,88 +24,6 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Appointment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("BusinessId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("EndAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime>("StartAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("BusinessId", "StartAt");
-
-                    b.HasIndex("BusinessId", "CustomerId", "StartAt");
-
-                    b.ToTable("Appointments", (string)null);
-                });
-
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.AppointmentService", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("AppointmentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("DurationMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Price")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid>("ServiceId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ServiceTitle")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<Guid>("StaffId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AppointmentId");
-
-                    b.HasIndex("ServiceId");
-
-                    b.HasIndex("StaffId");
-
-                    b.ToTable("AppointmentServices", (string)null);
-                });
 
             modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Business", b =>
                 {
@@ -180,98 +101,6 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("BusinessMembers", (string)null);
-                });
-
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Customer", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("BirthDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("BusinessId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("LastName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Mobile")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BusinessId", "Mobile")
-                        .IsUnique();
-
-                    b.ToTable("Customers", (string)null);
-                });
-
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Service", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("BusinessId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DefaultDurationMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("DefaultPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("SuggestedReturnDays")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BusinessId", "Title")
-                        .IsUnique();
-
-                    b.ToTable("Services", (string)null);
                 });
 
             modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Staff", b =>
@@ -515,52 +344,6 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Appointment", b =>
-                {
-                    b.HasOne("CustomerReturnCRM.Domain.Entities.Business", "Business")
-                        .WithMany()
-                        .HasForeignKey("BusinessId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("CustomerReturnCRM.Domain.Entities.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Business");
-
-                    b.Navigation("Customer");
-                });
-
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.AppointmentService", b =>
-                {
-                    b.HasOne("CustomerReturnCRM.Domain.Entities.Appointment", "Appointment")
-                        .WithMany("AppointmentServices")
-                        .HasForeignKey("AppointmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CustomerReturnCRM.Domain.Entities.Service", "Service")
-                        .WithMany()
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("CustomerReturnCRM.Domain.Entities.Staff", "Staff")
-                        .WithMany()
-                        .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Appointment");
-
-                    b.Navigation("Service");
-
-                    b.Navigation("Staff");
-                });
-
             modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.BusinessMember", b =>
                 {
                     b.HasOne("CustomerReturnCRM.Domain.Entities.Business", "Business")
@@ -572,28 +355,6 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                     b.HasOne("CustomerReturnCRM.Infrastructure.Identity.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Business");
-                });
-
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Customer", b =>
-                {
-                    b.HasOne("CustomerReturnCRM.Domain.Entities.Business", "Business")
-                        .WithMany()
-                        .HasForeignKey("BusinessId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Business");
-                });
-
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Service", b =>
-                {
-                    b.HasOne("CustomerReturnCRM.Domain.Entities.Business", "Business")
-                        .WithMany()
-                        .HasForeignKey("BusinessId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -665,11 +426,6 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Appointment", b =>
-                {
-                    b.Navigation("AppointmentServices");
                 });
 
             modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Business", b =>

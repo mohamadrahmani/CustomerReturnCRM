@@ -11,4 +11,6 @@ public sealed class Business : AuditableEntity
     public string? City { get; set; }
     public bool IsActive { get; set; } = true;
     public ICollection<BusinessMember> Members { get; set; } = new List<BusinessMember>();
+    public ICollection<Staff> Staff { get; set; } = new List<Staff>();
 }
+
