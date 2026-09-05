@@ -17,20 +17,11 @@ public sealed class UpdateStaffRequest
     public bool IsActive { get; init; } = true;
 }
 
-public sealed record StaffResult(
-    Guid Id,
-    Guid BusinessId,
-    string FirstName,
-    string LastName,
-    string? Mobile,
-    Guid? UserId,
-    bool IsActive,
-    DateTime CreatedAt,
-    DateTime? UpdatedAt);
+public sealed record StaffResult(Guid Id, Guid BusinessId, string FirstName, string LastName, string? Mobile, Guid? UserId, bool IsActive, DateTime CreatedAt, DateTime? UpdatedAt);
 
 public interface IStaffManagementService
 {
-    Task<PagedResult<StaffResult>> ListAsync(Guid businessId, Guid userId, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default);
+    Task<PagedResult<StaffResult>> ListAsync(Guid businessId, Guid userId, int page = 1, int pageSize = 20, string? search = null, bool? isActive = true, CancellationToken cancellationToken = default);
     Task<StaffResult?> GetAsync(Guid businessId, Guid staffId, Guid userId, CancellationToken cancellationToken = default);
     Task<StaffResult> CreateAsync(Guid businessId, Guid userId, CreateStaffRequest request, CancellationToken cancellationToken = default);
     Task<StaffResult?> UpdateAsync(Guid businessId, Guid staffId, Guid userId, UpdateStaffRequest request, CancellationToken cancellationToken = default);
