@@ -66,6 +66,10 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[9.0.8, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[6.6.2, )"
             }
           },
           "imports": [
@@ -297,6 +301,10 @@
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
               "version": "[9.0.8, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[8.14.0, )"
             }
           },
           "imports": [

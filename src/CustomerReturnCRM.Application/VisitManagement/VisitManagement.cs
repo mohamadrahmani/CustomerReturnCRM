@@ -1,4 +1,5 @@
 using CustomerReturnCRM.Domain.Entities;
+using CustomerReturnCRM.Application.Common;
 
 namespace CustomerReturnCRM.Application.VisitManagement;
 
@@ -31,7 +32,7 @@ public sealed record VisitResult(Guid Id, Guid BusinessId, Guid CustomerId, Guid
 public interface IVisitManagementService
 {
     Task<VisitResult> CreateAsync(Guid businessId, Guid userId, CreateVisitRequest request, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<VisitResult>> ListAsync(Guid businessId, Guid userId, DateTime? from, DateTime? to, CancellationToken cancellationToken = default);
+    Task<PagedResult<VisitResult>> ListAsync(Guid businessId, Guid userId, DateTime? from, DateTime? to, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default);
     Task<VisitResult?> GetAsync(Guid businessId, Guid visitId, Guid userId, CancellationToken cancellationToken = default);
     Task<VisitResult?> CompleteAppointmentAsync(Guid businessId, Guid appointmentId, Guid userId, CompleteAppointmentRequest request, CancellationToken cancellationToken = default);
 }

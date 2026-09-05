@@ -1,3 +1,5 @@
+using CustomerReturnCRM.Application.Common;
+
 namespace CustomerReturnCRM.Application.ServiceManagement;
 
 public sealed class CreateServiceRequest
@@ -23,7 +25,7 @@ public sealed record ServiceResult(Guid Id, Guid BusinessId, string Title, strin
 
 public interface IServiceManagementService
 {
-    Task<IReadOnlyList<ServiceResult>> ListAsync(Guid businessId, Guid userId, CancellationToken cancellationToken = default);
+    Task<PagedResult<ServiceResult>> ListAsync(Guid businessId, Guid userId, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default);
     Task<ServiceResult?> GetAsync(Guid businessId, Guid serviceId, Guid userId, CancellationToken cancellationToken = default);
     Task<ServiceResult> CreateAsync(Guid businessId, Guid userId, CreateServiceRequest request, CancellationToken cancellationToken = default);
     Task<ServiceResult?> UpdateAsync(Guid businessId, Guid serviceId, Guid userId, UpdateServiceRequest request, CancellationToken cancellationToken = default);

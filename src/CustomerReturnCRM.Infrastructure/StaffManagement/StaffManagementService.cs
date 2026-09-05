@@ -1,0 +1,102 @@
+using CustomerReturnCRM.Application.StaffManagement;
+using CustomerReturnCRM.Application.Common;
+using CustomerReturnCRM.Domain.Entities;
+using CustomerReturnCRM.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+namespace CustomerReturnCRM.Infrastructure.StaffManagement;
+
+public sealed class StaffManagementService : IStaffManagementService
+{
+    private readonly ApplicationDbContext _dbContext;
+
+    public StaffManagementService(ApplicationDbContext dbContext) => _dbContext = dbContext;
+
+    public async Task<PagedResult<StaffResult>> ListAsync(Guid businessId, Guid userId, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default)
+    {
+        await EnsureMemberAsync(businessId, userId, cancellationToken);
+        (page, pageSize) = Pagination.Normalize(page, pageSize);
+        var query = _dbContext.Staff.AsNoTracking().Where(x => x.BusinessId == businessId && x.IsActive);
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query.OrderBy(x => x.FirstName).ThenBy(x => x.LastName).Skip((page - 1) * pageSize).Take(pageSize).Select(x => ToResult(x)).ToListAsync(cancellationToken);
+        return Pagination.Create(items, page, pageSize, total);
+    }
+
+    public async Task<StaffResult?> GetAsync(Guid businessId, Guid staffId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        await EnsureMemberAsync(businessId, userId, cancellationToken);
+        return await _dbContext.Staff.AsNoTracking()
+            .Where(x => x.BusinessId == businessId && x.Id == staffId && x.IsActive)
+            .Select(x => ToResult(x)).SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<StaffResult> CreateAsync(Guid businessId, Guid userId, CreateStaffRequest request, CancellationToken cancellationToken = default)
+    {
+        await EnsureMemberAsync(businessId, userId, cancellationToken);
+        Validate(request.FirstName, request.LastName);
+        var staff = new Staff
+        {
+            Id = Guid.NewGuid(),
+            BusinessId = businessId,
+            FirstName = request.FirstName.Trim(),
+            LastName = request.LastName.Trim(),
+            Mobile = Normalize(request.Mobile),
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+        _dbContext.Staff.Add(staff);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return ToResult(staff);
+    }
+
+    public async Task<StaffResult?> UpdateAsync(Guid businessId, Guid staffId, Guid userId, UpdateStaffRequest request, CancellationToken cancellationToken = default)
+    {
+        await EnsureMemberAsync(businessId, userId, cancellationToken);
+        Validate(request.FirstName, request.LastName);
+        var staff = await _dbContext.Staff.SingleOrDefaultAsync(
+            x => x.BusinessId == businessId && x.Id == staffId,
+            cancellationToken);
+        if (staff is null) return null;
+        staff.FirstName = request.FirstName.Trim();
+        staff.LastName = request.LastName.Trim();
+        staff.Mobile = Normalize(request.Mobile);
+        staff.IsActive = request.IsActive;
+        staff.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return ToResult(staff);
+    }
+
+    public async Task<bool> DeactivateAsync(Guid businessId, Guid staffId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        await EnsureMemberAsync(businessId, userId, cancellationToken);
+        var staff = await _dbContext.Staff.SingleOrDefaultAsync(
+            x => x.BusinessId == businessId && x.Id == staffId,
+            cancellationToken);
+        if (staff is null) return false;
+        staff.IsActive = false;
+        staff.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    private async Task EnsureMemberAsync(Guid businessId, Guid userId, CancellationToken cancellationToken)
+    {
+        if (!await _dbContext.BusinessMembers.AnyAsync(
+                x => x.BusinessId == businessId && x.UserId == userId,
+                cancellationToken))
+            throw new UnauthorizedAccessException("The user is not a member of this business.");
+    }
+
+    private static void Validate(string firstName, string lastName)
+    {
+        if (string.IsNullOrWhiteSpace(firstName)) throw new ArgumentException("First name is required.");
+        if (string.IsNullOrWhiteSpace(lastName)) throw new ArgumentException("Last name is required.");
+    }
+
+    private static string? Normalize(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static StaffResult ToResult(Staff x) =>
+        new(x.Id, x.BusinessId, x.FirstName, x.LastName, x.Mobile, x.UserId,
+            x.IsActive, x.CreatedAt, x.UpdatedAt);
+}

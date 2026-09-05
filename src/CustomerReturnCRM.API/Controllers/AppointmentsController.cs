@@ -12,10 +12,10 @@ namespace CustomerReturnCRM.API.Controllers;
 public sealed class AppointmentsController : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<AppointmentResult>>> List(Guid businessId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromServices] IAppointmentManagementService service, CancellationToken cancellationToken)
+    public async Task<ActionResult<object>> List(Guid businessId, [FromQuery] DateTime? from, [FromQuery] DateTime? to, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromServices] IAppointmentManagementService service = null!, CancellationToken cancellationToken = default)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
-        try { return Ok(await service.ListAsync(businessId, userId, from, to, cancellationToken)); }
+        try { return Ok(await service.ListAsync(businessId, userId, from, to, page, pageSize, cancellationToken)); }
         catch (UnauthorizedAccessException) { return Forbid(); }
     }
 

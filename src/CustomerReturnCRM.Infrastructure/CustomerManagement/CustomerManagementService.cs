@@ -1,4 +1,5 @@
 using CustomerReturnCRM.Application.CustomerManagement;
+using CustomerReturnCRM.Application.Common;
 using CustomerReturnCRM.Domain.Entities;
 using CustomerReturnCRM.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +12,14 @@ public sealed class CustomerManagementService : ICustomerManagementService
 
     public CustomerManagementService(ApplicationDbContext dbContext) => _dbContext = dbContext;
 
-    public async Task<IReadOnlyList<CustomerResult>> ListAsync(Guid businessId, Guid userId, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<CustomerResult>> ListAsync(Guid businessId, Guid userId, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default)
     {
         await EnsureMemberAsync(businessId, userId, cancellationToken);
-        return await _dbContext.Customers.Where(x => x.BusinessId == businessId && x.IsActive).OrderBy(x => x.FirstName).ThenBy(x => x.LastName).Select(x => ToResult(x)).ToListAsync(cancellationToken);
+        (page, pageSize) = Pagination.Normalize(page, pageSize);
+        var query = _dbContext.Customers.Where(x => x.BusinessId == businessId && x.IsActive);
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query.OrderBy(x => x.FirstName).ThenBy(x => x.LastName).Skip((page - 1) * pageSize).Take(pageSize).Select(x => ToResult(x)).ToListAsync(cancellationToken);
+        return Pagination.Create(items, page, pageSize, total);
     }
 
     public async Task<CustomerResult?> GetAsync(Guid businessId, Guid customerId, Guid userId, CancellationToken cancellationToken = default)

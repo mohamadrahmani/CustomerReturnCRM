@@ -1,4 +1,5 @@
 using CustomerReturnCRM.Domain.Entities;
+using CustomerReturnCRM.Application.Common;
 
 namespace CustomerReturnCRM.Application.AppointmentManagement;
 
@@ -35,7 +36,7 @@ public sealed record AppointmentResult(Guid Id, Guid BusinessId, Guid CustomerId
 public interface IAppointmentManagementService
 {
     Task<AppointmentResult> CreateAsync(Guid businessId, Guid userId, CreateAppointmentRequest request, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<AppointmentResult>> ListAsync(Guid businessId, Guid userId, DateTime? from, DateTime? to, CancellationToken cancellationToken = default);
+    Task<PagedResult<AppointmentResult>> ListAsync(Guid businessId, Guid userId, DateTime? from, DateTime? to, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default);
     Task<AppointmentResult?> GetAsync(Guid businessId, Guid appointmentId, Guid userId, CancellationToken cancellationToken = default);
     Task<AppointmentResult?> UpdateAsync(Guid businessId, Guid appointmentId, Guid userId, UpdateAppointmentRequest request, CancellationToken cancellationToken = default);
     Task<AppointmentResult?> CancelAsync(Guid businessId, Guid appointmentId, Guid userId, CancellationToken cancellationToken = default);

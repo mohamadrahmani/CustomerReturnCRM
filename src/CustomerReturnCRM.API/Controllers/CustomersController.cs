@@ -11,10 +11,10 @@ namespace CustomerReturnCRM.API.Controllers;
 public sealed class CustomersController : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<CustomerResult>>> List(Guid businessId, [FromServices] ICustomerManagementService service, CancellationToken cancellationToken)
+    public async Task<ActionResult<object>> List(Guid businessId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromServices] ICustomerManagementService service = null!, CancellationToken cancellationToken = default)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
-        try { return Ok(await service.ListAsync(businessId, userId, cancellationToken)); }
+        try { return Ok(await service.ListAsync(businessId, userId, page, pageSize, cancellationToken)); }
         catch (UnauthorizedAccessException) { return Forbid(); }
     }
 

@@ -10,9 +10,10 @@ public sealed class BusinessSetupRequest
     public string FirstName { get; init; } = null!;
     public string LastName { get; init; } = null!;
     public string? StaffMobile { get; init; }
+    public Guid? ServiceTemplateId { get; init; }
 }
 
-public sealed record BusinessSetupResult(Guid BusinessId, Guid MembershipId, Guid StaffId);
+public sealed record BusinessSetupResult(Guid BusinessId, Guid MembershipId, Guid StaffId, Guid? ServiceId);
 
 public interface IBusinessSetupService
 {

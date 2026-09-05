@@ -11,12 +11,14 @@ namespace CustomerReturnCRM.API.Controllers;
 public sealed class VisitsController : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<VisitResult>>> List(
+    public async Task<ActionResult<object>> List(
         Guid businessId,
         [FromQuery] DateTime? from,
         [FromQuery] DateTime? to,
-        [FromServices] IVisitManagementService service,
-        CancellationToken cancellationToken)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromServices] IVisitManagementService service = null!,
+        CancellationToken cancellationToken = default)
     {
         if (!TryGetUserId(out var userId))
         {
@@ -25,7 +27,7 @@ public sealed class VisitsController : ControllerBase
 
         try
         {
-            return Ok(await service.ListAsync(businessId, userId, from, to, cancellationToken));
+            return Ok(await service.ListAsync(businessId, userId, from, to, page, pageSize, cancellationToken));
         }
         catch (UnauthorizedAccessException)
         {

@@ -1,4 +1,5 @@
 using CustomerReturnCRM.Application.ServiceManagement;
+using CustomerReturnCRM.Application.Common;
 using CustomerReturnCRM.Domain.Entities;
 using CustomerReturnCRM.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +12,14 @@ public sealed class ServiceManagementService : IServiceManagementService
 
     public ServiceManagementService(ApplicationDbContext dbContext) => _dbContext = dbContext;
 
-    public async Task<IReadOnlyList<ServiceResult>> ListAsync(Guid businessId, Guid userId, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<ServiceResult>> ListAsync(Guid businessId, Guid userId, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default)
     {
         await EnsureMemberAsync(businessId, userId, cancellationToken);
-        return await _dbContext.Services.Where(x => x.BusinessId == businessId && x.IsActive).OrderBy(x => x.Title).Select(x => ToResult(x)).ToListAsync(cancellationToken);
+        (page, pageSize) = Pagination.Normalize(page, pageSize);
+        var query = _dbContext.Services.Where(x => x.BusinessId == businessId && x.IsActive);
+        var total = await query.CountAsync(cancellationToken);
+        var items = await query.OrderBy(x => x.Title).Skip((page - 1) * pageSize).Take(pageSize).Select(x => ToResult(x)).ToListAsync(cancellationToken);
+        return Pagination.Create(items, page, pageSize, total);
     }
 
     public async Task<ServiceResult?> GetAsync(Guid businessId, Guid serviceId, Guid userId, CancellationToken cancellationToken = default)

@@ -4,12 +4,22 @@ using CustomerReturnCRM.Application.AppointmentManagement;
 using CustomerReturnCRM.Application.ServiceManagement;
 using CustomerReturnCRM.Application.VisitManagement;
 using CustomerReturnCRM.Application.Authentication;
+using CustomerReturnCRM.Application.ReturnAnalysis;
+using CustomerReturnCRM.Application.ReminderManagement;
+using CustomerReturnCRM.Application.Dashboard;
+using CustomerReturnCRM.Application.ServiceTemplateManagement;
+using CustomerReturnCRM.Application.StaffManagement;
 using CustomerReturnCRM.Infrastructure.CustomerManagement;
 using CustomerReturnCRM.Infrastructure.AppointmentManagement;
 using CustomerReturnCRM.Infrastructure.BusinessSetup;
 using CustomerReturnCRM.Infrastructure.Authentication;
 using CustomerReturnCRM.Infrastructure.Identity;
 using CustomerReturnCRM.Infrastructure.Persistence;
+using CustomerReturnCRM.Infrastructure.ReturnAnalysis;
+using CustomerReturnCRM.Infrastructure.ReminderManagement;
+using CustomerReturnCRM.Infrastructure.Dashboard;
+using CustomerReturnCRM.Infrastructure.ServiceTemplateManagement;
+using CustomerReturnCRM.Infrastructure.StaffManagement;
 using CustomerReturnCRM.Infrastructure.ServiceManagement;
 using CustomerReturnCRM.Infrastructure.VisitManagement;
 using Microsoft.AspNetCore.Identity;
@@ -31,6 +41,27 @@ public static class DependencyInjection
         services.AddScoped<IServiceManagementService, ServiceManagementService>();
         services.AddScoped<IVisitManagementService, VisitManagementService>();
         services.AddScoped<IAuthenticationService, AuthenticationService>();
+        services.AddScoped<IReturnAnalysisService, ReturnAnalysisService>();
+        services.AddScoped<IReminderManagementService, ReminderManagementService>();
+        services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<IServiceTemplateManagementService, ServiceTemplateManagementService>();
+        services.AddScoped<IStaffManagementService, StaffManagementService>();
+        services.AddSingleton(TimeProvider.System);
+        services.Configure<ReturnAnalysisOptions>(options =>
+        {
+            options.DueSoonDays = GetNonNegativeSetting(
+                configuration,
+                nameof(ReturnAnalysisOptions.DueSoonDays),
+                options.DueSoonDays);
+            options.AtRiskDays = GetNonNegativeSetting(
+                configuration,
+                nameof(ReturnAnalysisOptions.AtRiskDays),
+                options.AtRiskDays);
+            options.NoRecentVisitDays = GetNonNegativeSetting(
+                configuration,
+                nameof(ReturnAnalysisOptions.NoRecentVisitDays),
+                options.NoRecentVisitDays);
+        });
 
         services.AddIdentityCore<ApplicationUser>(options =>
             {
@@ -41,6 +72,27 @@ public static class DependencyInjection
             .AddEntityFrameworkStores<ApplicationDbContext>()
             ;
         return services;
+    }
+
+    private static int GetNonNegativeSetting(
+        IConfiguration configuration,
+        string settingName,
+        int defaultValue)
+    {
+        var key = $"{ReturnAnalysisOptions.SectionName}:{settingName}";
+        var configuredValue = configuration[key];
+        if (string.IsNullOrWhiteSpace(configuredValue))
+        {
+            return defaultValue;
+        }
+
+        if (!int.TryParse(configuredValue, out var parsedValue) || parsedValue < 0)
+        {
+            throw new InvalidOperationException(
+                $"Configuration value '{key}' must be a non-negative integer.");
+        }
+
+        return parsedValue;
     }
 }
 

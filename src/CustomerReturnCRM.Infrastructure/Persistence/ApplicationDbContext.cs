@@ -14,10 +14,13 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
     public DbSet<Staff> Staff => Set<Staff>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Service> Services => Set<Service>();
+    public DbSet<ServiceTemplate> ServiceTemplates => Set<ServiceTemplate>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<AppointmentService> AppointmentServices => Set<AppointmentService>();
     public DbSet<Visit> Visits => Set<Visit>();
     public DbSet<VisitService> VisitServices => Set<VisitService>();
+    public DbSet<SmartListDismissal> SmartListDismissals => Set<SmartListDismissal>();
+    public DbSet<Reminder> Reminders => Set<Reminder>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -86,6 +89,22 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
             entity.HasOne(x => x.Business).WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
         });
 
+        builder.Entity<ServiceTemplate>(entity =>
+        {
+            entity.ToTable("ServiceTemplates");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.BusinessType).HasMaxLength(100).IsRequired();
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.HasIndex(x => new { x.BusinessType, x.Title }).IsUnique();
+            entity.HasData(
+                new ServiceTemplate { Id = Guid.Parse("a1000000-0000-0000-0000-000000000001"), BusinessType = "General", Title = "General consultation", DefaultDurationMinutes = 60, SuggestedReturnDays = 30, IsActive = true, CreatedAt = new DateTime(2026, 1, 1) },
+                new ServiceTemplate { Id = Guid.Parse("a1000000-0000-0000-0000-000000000002"), BusinessType = "BeautySalon", Title = "Hair coloring", DefaultDurationMinutes = 120, SuggestedReturnDays = 60, IsActive = true, CreatedAt = new DateTime(2026, 1, 1) },
+                new ServiceTemplate { Id = Guid.Parse("a1000000-0000-0000-0000-000000000003"), BusinessType = "BeautySalon", Title = "Nail service", DefaultDurationMinutes = 90, SuggestedReturnDays = 21, IsActive = true, CreatedAt = new DateTime(2026, 1, 1) },
+                new ServiceTemplate { Id = Guid.Parse("a1000000-0000-0000-0000-000000000004"), BusinessType = "BeautySalon", Title = "Facial", DefaultDurationMinutes = 60, SuggestedReturnDays = 30, IsActive = true, CreatedAt = new DateTime(2026, 1, 1) },
+                new ServiceTemplate { Id = Guid.Parse("a1000000-0000-0000-0000-000000000005"), BusinessType = "BeautySalon", Title = "Haircut", DefaultDurationMinutes = 45, SuggestedReturnDays = 45, IsActive = true, CreatedAt = new DateTime(2026, 1, 1) });
+        });
+
         builder.Entity<Appointment>(entity =>
         {
             entity.ToTable("Appointments");
@@ -141,6 +160,36 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
             entity.HasOne(x => x.Visit).WithMany(x => x.VisitServices).HasForeignKey(x => x.VisitId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(x => x.Service).WithMany().HasForeignKey(x => x.ServiceId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(x => x.Staff).WithMany().HasForeignKey(x => x.StaffId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<SmartListDismissal>(entity =>
+        {
+            entity.ToTable("SmartListDismissals");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.SmartListType).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.HasIndex(x => new { x.BusinessId, x.CustomerId, x.ServiceId, x.SmartListType }).IsUnique();
+            entity.HasIndex(x => new { x.BusinessId, x.SmartListType });
+            entity.HasOne(x => x.Business).WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Service).WithMany().HasForeignKey(x => x.ServiceId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<CustomerReturnCRM.Infrastructure.Identity.ApplicationUser>().WithMany().HasForeignKey(x => x.DismissedByUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Reminder>(entity =>
+        {
+            entity.ToTable("Reminders");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
+            entity.Property(x => x.Note).HasMaxLength(1000);
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.HasIndex(x => new { x.BusinessId, x.Status, x.DueAt });
+            entity.HasIndex(x => new { x.BusinessId, x.CustomerId, x.DueAt });
+            entity.HasOne(x => x.Business).WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Service).WithMany().HasForeignKey(x => x.ServiceId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<CustomerReturnCRM.Infrastructure.Identity.ApplicationUser>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

@@ -229,6 +229,65 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                     b.ToTable("Customers", (string)null);
                 });
 
+            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Reminder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DueAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid?>("ServiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.HasIndex("BusinessId", "CustomerId", "DueAt");
+
+                    b.HasIndex("BusinessId", "Status", "DueAt");
+
+                    b.ToTable("Reminders", (string)null);
+                });
+
             modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Service", b =>
                 {
                     b.Property<Guid>("Id")
@@ -274,6 +333,149 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                     b.ToTable("Services", (string)null);
                 });
 
+            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.ServiceTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BusinessType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DefaultDurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("SuggestedReturnDays")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessType", "Title")
+                        .IsUnique();
+
+                    b.ToTable("ServiceTemplates", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000001"),
+                            BusinessType = "General",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DefaultDurationMinutes = 60,
+                            IsActive = true,
+                            SuggestedReturnDays = 30,
+                            Title = "General consultation"
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000002"),
+                            BusinessType = "BeautySalon",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DefaultDurationMinutes = 120,
+                            IsActive = true,
+                            SuggestedReturnDays = 60,
+                            Title = "Hair coloring"
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000003"),
+                            BusinessType = "BeautySalon",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DefaultDurationMinutes = 90,
+                            IsActive = true,
+                            SuggestedReturnDays = 21,
+                            Title = "Nail service"
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000004"),
+                            BusinessType = "BeautySalon",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DefaultDurationMinutes = 60,
+                            IsActive = true,
+                            SuggestedReturnDays = 30,
+                            Title = "Facial"
+                        },
+                        new
+                        {
+                            Id = new Guid("a1000000-0000-0000-0000-000000000005"),
+                            BusinessType = "BeautySalon",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DefaultDurationMinutes = 45,
+                            IsActive = true,
+                            SuggestedReturnDays = 45,
+                            Title = "Haircut"
+                        });
+                });
+
+            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.SmartListDismissal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DismissedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ExpectedReturnDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("LastVisitAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ServiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SmartListType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("DismissedByUserId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.HasIndex("BusinessId", "SmartListType");
+
+                    b.HasIndex("BusinessId", "CustomerId", "ServiceId", "SmartListType")
+                        .IsUnique()
+                        .HasFilter("[ServiceId] IS NOT NULL");
+
+                    b.ToTable("SmartListDismissals", (string)null);
+                });
+
             modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Staff", b =>
                 {
                     b.Property<Guid>("Id")
@@ -316,6 +518,92 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Staff", (string)null);
+                });
+
+            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Visit", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AppointmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("BusinessId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<decimal?>("TotalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("VisitAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("BusinessId", "VisitAt");
+
+                    b.HasIndex("BusinessId", "CustomerId", "VisitAt");
+
+                    b.ToTable("Visits", (string)null);
+                });
+
+            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.VisitService", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("ServiceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ServiceTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("StaffId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("SuggestedReturnDays")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("VisitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceId");
+
+                    b.HasIndex("StaffId");
+
+                    b.HasIndex("VisitId");
+
+                    b.ToTable("VisitServices", (string)null);
                 });
 
             modelBuilder.Entity("CustomerReturnCRM.Infrastructure.Identity.ApplicationUser", b =>
@@ -589,6 +877,38 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                     b.Navigation("Business");
                 });
 
+            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Reminder", b =>
+                {
+                    b.HasOne("CustomerReturnCRM.Domain.Entities.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CustomerReturnCRM.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CustomerReturnCRM.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CustomerReturnCRM.Domain.Entities.Service", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Business");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Service");
+                });
+
             modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Service", b =>
                 {
                     b.HasOne("CustomerReturnCRM.Domain.Entities.Business", "Business")
@@ -598,6 +918,38 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Business");
+                });
+
+            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.SmartListDismissal", b =>
+                {
+                    b.HasOne("CustomerReturnCRM.Domain.Entities.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CustomerReturnCRM.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CustomerReturnCRM.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("DismissedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CustomerReturnCRM.Domain.Entities.Service", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Business");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Service");
                 });
 
             modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Staff", b =>
@@ -614,6 +966,59 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Business");
+                });
+
+            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Visit", b =>
+                {
+                    b.HasOne("CustomerReturnCRM.Domain.Entities.Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("CustomerReturnCRM.Domain.Entities.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CustomerReturnCRM.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Business");
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.VisitService", b =>
+                {
+                    b.HasOne("CustomerReturnCRM.Domain.Entities.Service", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CustomerReturnCRM.Domain.Entities.Staff", "Staff")
+                        .WithMany()
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CustomerReturnCRM.Domain.Entities.Visit", "Visit")
+                        .WithMany("VisitServices")
+                        .HasForeignKey("VisitId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Service");
+
+                    b.Navigation("Staff");
+
+                    b.Navigation("Visit");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -677,6 +1082,11 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                     b.Navigation("Members");
 
                     b.Navigation("Staff");
+                });
+
+            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Visit", b =>
+                {
+                    b.Navigation("VisitServices");
                 });
 #pragma warning restore 612, 618
         }

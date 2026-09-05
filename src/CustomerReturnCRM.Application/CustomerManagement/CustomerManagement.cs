@@ -1,3 +1,5 @@
+using CustomerReturnCRM.Application.Common;
+
 namespace CustomerReturnCRM.Application.CustomerManagement;
 
 public sealed class CreateCustomerRequest
@@ -23,7 +25,7 @@ public sealed record CustomerResult(Guid Id, Guid BusinessId, string FirstName, 
 
 public interface ICustomerManagementService
 {
-    Task<IReadOnlyList<CustomerResult>> ListAsync(Guid businessId, Guid userId, CancellationToken cancellationToken = default);
+    Task<PagedResult<CustomerResult>> ListAsync(Guid businessId, Guid userId, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default);
     Task<CustomerResult?> GetAsync(Guid businessId, Guid customerId, Guid userId, CancellationToken cancellationToken = default);
     Task<CustomerResult> CreateAsync(Guid businessId, Guid userId, CreateCustomerRequest request, CancellationToken cancellationToken = default);
     Task<CustomerResult?> UpdateAsync(Guid businessId, Guid customerId, Guid userId, UpdateCustomerRequest request, CancellationToken cancellationToken = default);

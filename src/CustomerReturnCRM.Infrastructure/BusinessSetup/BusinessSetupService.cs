@@ -63,13 +63,38 @@ public sealed class BusinessSetupService : IBusinessSetupService
             CreatedAt = DateTime.UtcNow
         };
 
+        Service? firstService = null;
+        if (request.ServiceTemplateId.HasValue)
+        {
+            var template = await _dbContext.ServiceTemplates
+                .Where(x => x.Id == request.ServiceTemplateId.Value && x.IsActive &&
+                            (x.BusinessType == business.BusinessType || x.BusinessType == "General"))
+                .OrderBy(x => x.BusinessType == "General")
+                .FirstOrDefaultAsync(cancellationToken);
+            if (template is null)
+                throw new ArgumentException("The selected service template is not available for this business type.");
+
+            firstService = new Service
+            {
+                Id = Guid.NewGuid(),
+                BusinessId = business.Id,
+                Title = template.Title,
+                DefaultPrice = 0,
+                DefaultDurationMinutes = template.DefaultDurationMinutes,
+                SuggestedReturnDays = template.SuggestedReturnDays,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+        }
+
         _dbContext.Businesses.Add(business);
         _dbContext.BusinessMembers.Add(membership);
         _dbContext.Staff.Add(staff);
+        if (firstService is not null) _dbContext.Services.Add(firstService);
         await _dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        return new BusinessSetupResult(business.Id, membership.Id, staff.Id);
+        return new BusinessSetupResult(business.Id, membership.Id, staff.Id, firstService?.Id);
     }
 
     private static void Validate(BusinessSetupRequest request)

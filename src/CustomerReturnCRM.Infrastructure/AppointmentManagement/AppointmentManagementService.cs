@@ -1,4 +1,5 @@
 using CustomerReturnCRM.Application.AppointmentManagement;
+using CustomerReturnCRM.Application.Common;
 using CustomerReturnCRM.Domain.Entities;
 using CustomerReturnCRM.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -28,14 +29,16 @@ public sealed class AppointmentManagementService : IAppointmentManagementService
         return ToResult(appointment);
     }
 
-    public async Task<IReadOnlyList<AppointmentResult>> ListAsync(Guid businessId, Guid userId, DateTime? from, DateTime? to, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<AppointmentResult>> ListAsync(Guid businessId, Guid userId, DateTime? from, DateTime? to, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default)
     {
         await EnsureMemberAsync(businessId, userId, cancellationToken);
         var query = _dbContext.Appointments.AsNoTracking().Include(x => x.AppointmentServices).Where(x => x.BusinessId == businessId);
         if (from.HasValue) query = query.Where(x => x.StartAt >= from.Value);
         if (to.HasValue) query = query.Where(x => x.StartAt < to.Value);
-        var appointments = await query.OrderBy(x => x.StartAt).ToListAsync(cancellationToken);
-        return appointments.Select(ToResult).ToList();
+        (page, pageSize) = Pagination.Normalize(page, pageSize);
+        var total = await query.CountAsync(cancellationToken);
+        var appointments = await query.OrderBy(x => x.StartAt).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+        return Pagination.Create(appointments.Select(ToResult).ToList(), page, pageSize, total);
     }
 
     public async Task<AppointmentResult?> GetAsync(Guid businessId, Guid appointmentId, Guid userId, CancellationToken cancellationToken = default)
