@@ -7,27 +7,18 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
   if (auth?.token) headers.set("Authorization", `Bearer ${auth.token}`);
-
   const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
-
   if (response.status === 401 && typeof window !== "undefined") {
     sessionStorage.removeItem("crm_auth");
     sessionStorage.removeItem("crm_business_id");
     window.location.href = "/login";
     throw new Error("نشست شما منقضی شده است.");
   }
-
   if (!response.ok) {
     let message = `Request failed (${response.status})`;
-    try {
-      const body = await response.json();
-      message = body.error ?? message;
-    } catch {
-      // Keep the status-based message when the API has no JSON error body.
-    }
+    try { const body = await response.json(); message = body.error ?? message; } catch { /* status message */ }
     throw new Error(message);
   }
-
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
@@ -61,4 +52,6 @@ export async function getCustomers(businessId: string, page = 1, pageSize = 20, 
   return apiFetch<PagedResult<Customer>>(`/api/businesses/${businessId}/customers?${params.toString()}`);
 }
 export async function getCustomerProfile(businessId: string, customerId: string) { return apiFetch<CustomerProfile>(`/api/businesses/${businessId}/customers/${customerId}/profile`); }
+export async function updateCustomer(businessId: string, customerId: string, request: { firstName: string; lastName?: string; mobile: string; birthDate?: string; note?: string; isActive?: boolean }) { return apiFetch<Customer>(`/api/businesses/${businessId}/customers/${customerId}`, { method: "PUT", body: JSON.stringify(request) }); }
+export async function createReminder(businessId: string, request: { customerId: string; serviceId?: string; title: string; dueAt: string; note?: string }) { return apiFetch<CustomerProfileReminder>(`/api/businesses/${businessId}/reminders`, { method: "POST", body: JSON.stringify(request) }); }
 export async function createCustomer(businessId: string, request: { firstName: string; lastName?: string; mobile: string; birthDate?: string; note?: string }) { return apiFetch<Customer>(`/api/businesses/${businessId}/customers`, { method: "POST", body: JSON.stringify(request) }); }
