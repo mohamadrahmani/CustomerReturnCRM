@@ -70,7 +70,7 @@ public sealed class CustomerManagementService : ICustomerManagementService
         return new PagedResult<CustomerResult>(results, page, pageSize, totalCount);
     }
 
-    public async Task<CustomerResult?> GetByIdAsync(Guid businessId, Guid customerId, Guid userId, CancellationToken cancellationToken = default)
+    public async Task<CustomerResult?> GetAsync(Guid businessId, Guid customerId, Guid userId, CancellationToken cancellationToken = default)
     {
         await EnsureMemberAsync(businessId, userId, cancellationToken);
         var customer = await _dbContext.Customers
