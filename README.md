@@ -147,6 +147,29 @@ is provided, the selected template is copied into the new business as
 the first service. The copied service starts with price `0` and can be
 edited afterwards.
 
+`GET /api/service-templates?businessType=...` returns active templates
+for the requested business type plus active `General` templates. The
+endpoint is read-only and templates are used only during onboarding;
+the selected template is copied into the business as a normal service.
+
+## Customer list summary
+
+Customer list and detail responses include the following visit summary
+fields in addition to the customer's stored profile data:
+
+```text
+LastVisitDate
+TotalVisits
+```
+
+`LastVisitDate` is the most recent actual `Visit.VisitAt` for the customer
+within the current business, and `TotalVisits` counts actual visits for
+that customer within the current business. Customers with no visits have
+`LastVisitDate = null` and `TotalVisits = 0`.
+
+These values are query-derived and do not introduce duplicated summary
+columns or state into the `Customer` entity.
+
 ## Return analysis rules
 
 Expected return dates are calculated dynamically from the latest
@@ -199,13 +222,19 @@ for manual smart-list dismissal and restoration.
 The `AddReminders` migration creates the `Reminders` table required for
 manual follow-up tasks.
 
+The `AddServiceTemplates` migration creates the service-template catalog
+and seeds the initial `General` and `BeautySalon` templates used by
+onboarding.
+
 ## Current MVP scope
 
 Implemented:
 
 - Registration, login and JWT authentication
 - Business setup with owner membership and staff
+- Service templates for onboarding, including initial seeded templates
 - Customer and service management
+- Customer list visit summary (`LastVisitDate`, `TotalVisits`)
 - Appointment management
 - Appointment completion into a visit
 - Direct walk-in visit creation
@@ -216,7 +245,6 @@ Implemented:
 
 Not implemented yet:
 
-- Service templates
 - SMS and automatic messaging
 - Payments, accounting and inventory
 - Branches, online booking and mobile application
