@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using CustomerReturnCRM.Application.Common;
 using CustomerReturnCRM.Application.ReturnAnalysis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,7 @@ namespace CustomerReturnCRM.API.Controllers;
 public sealed class SmartListsController : ControllerBase
 {
     [HttpGet("overdue")]
-    public Task<ActionResult<object>> GetOverdue(
+    public Task<ActionResult<PagedResult<SmartListItemResult>>> GetOverdue(
         Guid businessId,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -22,7 +23,7 @@ public sealed class SmartListsController : ControllerBase
             cancellationToken);
 
     [HttpGet("due-soon")]
-    public Task<ActionResult<object>> GetDueSoon(
+    public Task<ActionResult<PagedResult<SmartListItemResult>>> GetDueSoon(
         Guid businessId,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -33,7 +34,7 @@ public sealed class SmartListsController : ControllerBase
             cancellationToken);
 
     [HttpGet("at-risk")]
-    public Task<ActionResult<object>> GetAtRisk(
+    public Task<ActionResult<PagedResult<SmartListItemResult>>> GetAtRisk(
         Guid businessId,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -44,7 +45,7 @@ public sealed class SmartListsController : ControllerBase
             cancellationToken);
 
     [HttpGet("no-recent-visit")]
-    public Task<ActionResult<object>> GetNoRecentVisit(
+    public Task<ActionResult<PagedResult<SmartListItemResult>>> GetNoRecentVisit(
         Guid businessId,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -74,8 +75,8 @@ public sealed class SmartListsController : ControllerBase
             (userId, token) => service.RestoreAsync(businessId, userId, request, token),
             cancellationToken);
 
-    private async Task<ActionResult<object>> ExecuteAsync(
-        Func<Guid, CancellationToken, Task<object>> query,
+    private async Task<ActionResult<PagedResult<SmartListItemResult>>> ExecuteAsync(
+        Func<Guid, CancellationToken, Task<PagedResult<SmartListItemResult>>> query,
         CancellationToken cancellationToken)
     {
         if (!TryGetUserId(out var userId))
