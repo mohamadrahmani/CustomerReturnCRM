@@ -5,11 +5,25 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createService, getServices, updateService, type Service } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 
-function money(value: number) { return `${value.toLocaleString("fa-IR")} تومان`; }
-function LoadingRows() { return <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-20 animate-pulse rounded-2xl bg-white/70" />)}</div>; }
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) { return <label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-700">{label}{required && <span className="mr-1 text-pink-500">*</span>}</span>{children}</label>; }
-function Status({ active }: { active: boolean }) { return active ? <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-700">فعال</span> : <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black text-slate-500">غیرفعال</span>; }
-function ReturnCycleStatus({ days }: { days: number | null }) { return days == null ? <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-gradient-to-l from-rose-50 to-red-50 px-2.5 py-1 text-[10px] font-black text-rose-700"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" />تعریف نشده</span> : <span className="text-xs text-slate-500">{days.toLocaleString("fa-IR")} روز</span>; }
+function money(value: number) {
+  return `${value.toLocaleString("fa-IR")} تومان`;
+}
+
+function LoadingRows() {
+  return <div className="space-y-2">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-20 animate-pulse rounded-2xl bg-white/70" />)}</div>;
+}
+
+function Field({ label, required, children }: { label: React.ReactNode; required?: boolean; children: React.ReactNode }) {
+  return <label className="block"><span className="mb-1.5 block text-xs font-bold text-slate-700">{label}{required && <span className="mr-1 text-pink-500">*</span>}</span>{children}</label>;
+}
+
+function Status({ active }: { active: boolean }) {
+  return active ? <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-700">فعال</span> : <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black text-slate-500">غیرفعال</span>;
+}
+
+function ReturnCycleStatus({ days }: { days: number | null }) {
+  return days == null ? <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-gradient-to-l from-rose-50 to-red-50 px-2.5 py-1 text-[10px] font-black text-rose-700"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" />تعریف نشده</span> : <span className="text-xs text-slate-500">{days.toLocaleString("fa-IR")} روز</span>;
+}
 
 function ReturnCycleInfo() {
   return <span className="group relative inline-flex align-middle">
@@ -35,28 +49,67 @@ export default function ServicesPage() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { const timer = window.setTimeout(() => { setSearch(searchInput.trim()); setPage(1); }, 300); return () => window.clearTimeout(timer); }, [searchInput]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
   const isActive = status === "all" ? null : status === "active";
-  const query = useQuery({ queryKey: ["services", activeBusinessId, page, search, status], queryFn: () => getServices(activeBusinessId!, page, 12, search, isActive), enabled: isReady && !!activeBusinessId, staleTime: 15_000 });
+  const query = useQuery({
+    queryKey: ["services", activeBusinessId, page, search, status],
+    queryFn: () => getServices(activeBusinessId!, page, 12, search, isActive),
+    enabled: isReady && !!activeBusinessId,
+    staleTime: 15_000,
+  });
 
   if (!isReady || !activeBusinessId) return <main className="p-4"><LoadingRows /></main>;
   const data = query.data;
-  const openCreate = () => { setForm(emptyForm); setError(""); setEditing(null); setCreateOpen(true); };
-  const openEdit = (service: Service) => { setForm({ title: service.title, description: service.description ?? "", defaultPrice: String(service.defaultPrice), defaultDurationMinutes: String(service.defaultDurationMinutes), suggestedReturnDays: service.suggestedReturnDays == null ? "" : String(service.suggestedReturnDays), isActive: service.isActive }); setError(""); setEditing(service); setCreateOpen(true); };
+
+  const openCreate = () => {
+    setForm(emptyForm);
+    setError("");
+    setEditing(null);
+    setCreateOpen(true);
+  };
+
+  const openEdit = (service: Service) => {
+    setForm({ title: service.title, description: service.description ?? "", defaultPrice: String(service.defaultPrice), defaultDurationMinutes: String(service.defaultDurationMinutes), suggestedReturnDays: service.suggestedReturnDays == null ? "" : String(service.suggestedReturnDays), isActive: service.isActive });
+    setError("");
+    setEditing(service);
+    setCreateOpen(true);
+  };
+
   const close = () => { if (!saving) setCreateOpen(false); };
+
   async function submit(event: React.FormEvent) {
-    event.preventDefault(); setError("");
-    const price = Number(form.defaultPrice); const duration = Number(form.defaultDurationMinutes); const returnDays = form.suggestedReturnDays.trim() === "" ? undefined : Number(form.suggestedReturnDays);
+    event.preventDefault();
+    setError("");
+    const price = Number(form.defaultPrice);
+    const duration = Number(form.defaultDurationMinutes);
+    const returnDays = form.suggestedReturnDays.trim() === "" ? undefined : Number(form.suggestedReturnDays);
+
     if (!form.title.trim()) return setError("عنوان خدمت الزامی است.");
     if (!Number.isFinite(price) || price < 0) return setError("قیمت باید عددی صفر یا بیشتر باشد.");
     if (!Number.isInteger(duration) || duration <= 0) return setError("مدت خدمت باید عدد صحیح بزرگ‌تر از صفر باشد.");
     if (returnDays !== undefined && (!Number.isInteger(returnDays) || returnDays < 0)) return setError("چرخه بازگشت باید عدد صحیح صفر یا بیشتر باشد.");
+
     setSaving(true);
     try {
-      if (editing) await updateService(activeBusinessId!, editing.id, { title: form.title.trim(), description: form.description.trim() || undefined, defaultPrice: price, defaultDurationMinutes: duration, suggestedReturnDays: returnDays, isActive: form.isActive });
-      else await createService(activeBusinessId!, { title: form.title.trim(), description: form.description.trim() || undefined, defaultPrice: price, defaultDurationMinutes: duration, suggestedReturnDays: returnDays });
-      setCreateOpen(false); await queryClient.invalidateQueries({ queryKey: ["services", activeBusinessId] });
-    } catch (e) { setError(e instanceof Error ? e.message : "ذخیره خدمت انجام نشد."); } finally { setSaving(false); }
+      if (editing) {
+        await updateService(activeBusinessId!, editing.id, { title: form.title.trim(), description: form.description.trim() || undefined, defaultPrice: price, defaultDurationMinutes: duration, suggestedReturnDays: returnDays, isActive: form.isActive });
+      } else {
+        await createService(activeBusinessId!, { title: form.title.trim(), description: form.description.trim() || undefined, defaultPrice: price, defaultDurationMinutes: duration, suggestedReturnDays: returnDays });
+      }
+      setCreateOpen(false);
+      await queryClient.invalidateQueries({ queryKey: ["services", activeBusinessId] });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "ذخیره خدمت انجام نشد.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return <main className="-mx-4 -mt-5 min-h-[calc(100vh-65px)] bg-gradient-to-b from-rose-50 via-pink-50/60 to-violet-50/40 px-4 pb-10 pt-5 sm:-mx-8 sm:-mt-8 sm:px-8 sm:pt-7">
