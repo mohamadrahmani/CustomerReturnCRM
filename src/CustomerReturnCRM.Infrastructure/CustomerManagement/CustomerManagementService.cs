@@ -12,12 +12,23 @@ public sealed class CustomerManagementService : ICustomerManagementService
 
     public CustomerManagementService(ApplicationDbContext dbContext) => _dbContext = dbContext;
 
-    public async Task<PagedResult<CustomerResult>> ListAsync(Guid businessId, Guid userId, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<CustomerResult>> ListAsync(Guid businessId, Guid userId, int page = 1, int pageSize = 20, string? search = null, bool? isActive = true, CancellationToken cancellationToken = default)
     {
         await EnsureMemberAsync(businessId, userId, cancellationToken);
         (page, pageSize) = Pagination.Normalize(page, pageSize);
 
-        var query = _dbContext.Customers.Where(x => x.BusinessId == businessId && x.IsActive);
+        var query = _dbContext.Customers.Where(x => x.BusinessId == businessId);
+        if (isActive.HasValue) query = query.Where(x => x.IsActive == isActive.Value);
+
+        var normalizedSearch = search?.Trim();
+        if (!string.IsNullOrWhiteSpace(normalizedSearch))
+        {
+            query = query.Where(x =>
+                x.FirstName.Contains(normalizedSearch) ||
+                (x.LastName != null && x.LastName.Contains(normalizedSearch)) ||
+                x.Mobile.Contains(normalizedSearch));
+        }
+
         var total = await query.CountAsync(cancellationToken);
 
         var items = await query
@@ -83,15 +94,9 @@ public sealed class CustomerManagementService : ICustomerManagementService
 
         var customer = new Customer
         {
-            Id = Guid.NewGuid(),
-            BusinessId = businessId,
-            FirstName = request.FirstName.Trim(),
-            LastName = Normalize(request.LastName),
-            Mobile = mobile,
-            BirthDate = request.BirthDate,
-            Note = Normalize(request.Note),
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            Id = Guid.NewGuid(), BusinessId = businessId, FirstName = request.FirstName.Trim(),
+            LastName = Normalize(request.LastName), Mobile = mobile, BirthDate = request.BirthDate,
+            Note = Normalize(request.Note), IsActive = true, CreatedAt = DateTime.UtcNow
         };
 
         _dbContext.Customers.Add(customer);
@@ -110,16 +115,13 @@ public sealed class CustomerManagementService : ICustomerManagementService
         if (await _dbContext.Customers.AnyAsync(x => x.BusinessId == businessId && x.Mobile == mobile && x.Id != customerId, cancellationToken))
             throw new InvalidOperationException("A customer with this mobile already exists in the business.");
 
-        customer.FirstName = request.FirstName.Trim();
-        customer.LastName = Normalize(request.LastName);
-        customer.Mobile = mobile;
-        customer.BirthDate = request.BirthDate;
-        customer.Note = Normalize(request.Note);
-        customer.IsActive = request.IsActive;
-        customer.UpdatedAt = DateTime.UtcNow;
+        customer.FirstName = request.FirstName.Trim(); customer.LastName = Normalize(request.LastName);
+        customer.Mobile = mobile; customer.BirthDate = request.BirthDate; customer.Note = Normalize(request.Note);
+        customer.IsActive = request.IsActive; customer.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync(cancellationToken);
-
-        return await GetAsync(businessId, customerId, userId, cancellationToken);
+        var visits = await _dbContext.Visits.CountAsync(v => v.BusinessId == businessId && v.CustomerId == customerId, cancellationToken);
+        var lastVisit = await _dbContext.Visits.Where(v => v.BusinessId == businessId && v.CustomerId == customerId).OrderByDescending(v => v.VisitAt).Select(v => (DateTime?)v.VisitAt).FirstOrDefaultAsync(cancellationToken);
+        return ToResult(customer, lastVisit, visits);
     }
 
     public async Task<bool> DeactivateAsync(Guid businessId, Guid customerId, Guid userId, CancellationToken cancellationToken = default)
@@ -135,9 +137,14 @@ public sealed class CustomerManagementService : ICustomerManagementService
 
     private async Task EnsureMemberAsync(Guid businessId, Guid userId, CancellationToken cancellationToken)
     {
-        if (!await _dbContext.BusinessMembers.AnyAsync(x => x.BusinessId == businessId && x.UserId == userId, cancellationToken))
-            throw new UnauthorizedAccessException("The user is not a member of this business.");
+        var isMember = await _dbContext.BusinessMembers.AnyAsync(x => x.BusinessId == businessId && x.UserId == userId && x.IsActive, cancellationToken);
+        if (!isMember) throw new UnauthorizedAccessException();
     }
+
+    private static CustomerResult ToResult(Customer customer, DateTime? lastVisit, int totalVisits) => new(
+        customer.Id, customer.BusinessId, customer.FirstName, customer.LastName, customer.Mobile,
+        customer.BirthDate, customer.Note, customer.IsActive, customer.CreatedAt, customer.UpdatedAt,
+        lastVisit, totalVisits);
 
     private static void Validate(string firstName, string mobile)
     {
@@ -146,7 +153,4 @@ public sealed class CustomerManagementService : ICustomerManagementService
     }
 
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-
-    private static CustomerResult ToResult(Customer x, DateTime? lastVisitDate, int totalVisits) =>
-        new(x.Id, x.BusinessId, x.FirstName, x.LastName, x.Mobile, x.BirthDate, x.Note, x.IsActive, x.CreatedAt, x.UpdatedAt, lastVisitDate, totalVisits);
 }
