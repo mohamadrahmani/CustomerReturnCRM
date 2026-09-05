@@ -57,7 +57,7 @@ public sealed class CustomerManagementService : ICustomerManagementService
                 Customer = x,
                 LastVisitDate = _dbContext.Visits
                     .Where(v => v.BusinessId == businessId && v.CustomerId == x.Id)
-                    .Max(v => (DateTime?)v.VisitDate),
+                    .Max(v => (DateTime?)v.VisitAt),
                 TotalVisits = _dbContext.Visits
                     .Count(v => v.BusinessId == businessId && v.CustomerId == x.Id)
             })
@@ -67,7 +67,7 @@ public sealed class CustomerManagementService : ICustomerManagementService
             .Select(x => ToResult(x.Customer, x.LastVisitDate, x.TotalVisits))
             .ToList();
 
-        return new PagedResult<CustomerResult>(results, page, pageSize, totalCount);
+        return Pagination.Create(results, page, pageSize, totalCount);
     }
 
     public async Task<CustomerResult?> GetAsync(Guid businessId, Guid customerId, Guid userId, CancellationToken cancellationToken = default)
@@ -84,7 +84,7 @@ public sealed class CustomerManagementService : ICustomerManagementService
             .GroupBy(x => x.CustomerId)
             .Select(g => new
             {
-                LastVisitDate = g.Max(x => (DateTime?)x.VisitDate),
+                LastVisitDate = g.Max(x => (DateTime?)x.VisitAt),
                 TotalVisits = g.Count()
             })
             .SingleOrDefaultAsync(cancellationToken);
@@ -150,7 +150,7 @@ public sealed class CustomerManagementService : ICustomerManagementService
             .GroupBy(x => x.CustomerId)
             .Select(g => new
             {
-                LastVisitDate = g.Max(x => (DateTime?)x.VisitDate),
+                LastVisitDate = g.Max(x => (DateTime?)x.VisitAt),
                 TotalVisits = g.Count()
             })
             .SingleOrDefaultAsync(cancellationToken);
