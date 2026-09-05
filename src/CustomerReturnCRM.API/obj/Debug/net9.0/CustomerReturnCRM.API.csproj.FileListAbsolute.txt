@@ -175,3 +175,4 @@ E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.API\bin\Debug\net9.0\Swashbuck
 E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.API\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.API\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.API\obj\Debug\net9.0\CustomerReturnCRM.API.MvcApplicationPartsAssemblyInfo.cs
+E:\GitHub\CustomerReturnCRM\src\CustomerReturnCRM.API\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
