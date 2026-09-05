@@ -45,8 +45,8 @@ export default function ServicesPage() {
     if (returnDays !== undefined && (!Number.isInteger(returnDays) || returnDays < 0)) return setError("چرخه بازگشت باید عدد صحیح صفر یا بیشتر باشد.");
     setSaving(true);
     try {
-      if (editing) await updateService(activeBusinessId, editing.id, { title: form.title.trim(), description: form.description.trim() || undefined, defaultPrice: price, defaultDurationMinutes: duration, suggestedReturnDays: returnDays, isActive: form.isActive });
-      else await createService(activeBusinessId, { title: form.title.trim(), description: form.description.trim() || undefined, defaultPrice: price, defaultDurationMinutes: duration, suggestedReturnDays: returnDays });
+      if (editing) await updateService(activeBusinessId!, editing.id, { title: form.title.trim(), description: form.description.trim() || undefined, defaultPrice: price, defaultDurationMinutes: duration, suggestedReturnDays: returnDays, isActive: form.isActive });
+      else await createService(activeBusinessId!, { title: form.title.trim(), description: form.description.trim() || undefined, defaultPrice: price, defaultDurationMinutes: duration, suggestedReturnDays: returnDays });
       setCreateOpen(false); await queryClient.invalidateQueries({ queryKey: ["services", activeBusinessId] });
     } catch (e) { setError(e instanceof Error ? e.message : "ذخیره خدمت انجام نشد."); } finally { setSaving(false); }
   }
