@@ -46,31 +46,29 @@ function actionBadgeClass(type: string) {
   return "bg-violet-100 text-violet-700";
 }
 
-function avatarInitial(name: string | null | undefined) {
-  const value = (name ?? "").trim();
-  if (!value) return "؟";
-  const parts = value.split(/\s+/).filter(Boolean);
-  return parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : value[0];
-}
-
 function avatarTone(name: string | null | undefined) {
   const value = name ?? "";
   const index = [...value].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 4;
   return [
-    "bg-rose-100 text-rose-700",
-    "bg-violet-100 text-violet-700",
-    "bg-amber-100 text-amber-700",
-    "bg-emerald-100 text-emerald-700",
+    "bg-rose-100 text-rose-600",
+    "bg-violet-100 text-violet-600",
+    "bg-amber-100 text-amber-600",
+    "bg-emerald-100 text-emerald-600",
   ][index];
 }
 
 function Avatar({ name, size = "md" }: { name: string | null | undefined; size?: "sm" | "md" }) {
   return (
     <span
-      className={`${size === "sm" ? "h-9 w-9 text-[11px]" : "h-11 w-11 text-xs"} ${avatarTone(name)} flex shrink-0 items-center justify-center rounded-full font-black ring-2 ring-white`}
+      className={`${size === "sm" ? "h-9 w-9" : "h-11 w-11"} ${avatarTone(name)} flex shrink-0 items-center justify-center rounded-full ring-2 ring-white`}
       aria-hidden="true"
     >
-      {avatarInitial(name)}
+      <svg viewBox="0 0 48 48" fill="none" className={size === "sm" ? "h-7 w-7" : "h-8 w-8"}>
+        <path d="M10 39c1.8-7 7.1-10.7 14-10.7S36.2 32 38 39" fill="currentColor" opacity=".7" />
+        <circle cx="24" cy="19" r="7.2" fill="currentColor" opacity=".9" />
+        <path d="M14.8 20.5c-.4-8.2 3.6-13 9.4-13 6.3 0 9.9 4.6 9.2 12.9-1.1-2.7-3.1-4.2-5.3-4.8-2.4 2.1-5.8 3.1-10.5 2.5-.5.7-.9 1.5-1.2 2.4-.7.1-1.2-.1-1.6 0Z" fill="currentColor" />
+        <path d="M17.2 24.4c1.1 2.9 3.4 4.8 6.8 4.8s5.7-1.9 6.8-4.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity=".45" />
+      </svg>
     </span>
   );
 }
