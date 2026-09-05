@@ -26,6 +26,7 @@ customers.
 
 ## Technology and structure
 
+Backend:
 - .NET 9 / ASP.NET Core Web API
 - Entity Framework Core 9
 - SQL Server
@@ -33,45 +34,62 @@ customers.
 - JWT authentication
 - Lightweight Clean Architecture
 
+Repository structure:
+
 ```text
 src/
   CustomerReturnCRM.Domain
   CustomerReturnCRM.Application
   CustomerReturnCRM.Infrastructure
   CustomerReturnCRM.API
+  CustomerReturnCRM.Web        # Next.js frontend
 ```
+
+`CustomerReturnCRM.Web` is an independent Next.js application in the
+same repository. It is not a .NET project and therefore is intentionally
+not added to `CustomerReturnCRM.sln`.
+
+Frontend stack:
+- Next.js 15 / React 19
+- TypeScript
+- Tailwind CSS
+- TanStack React Query
+- React Hook Form
+- RTL / Persian-first UI
 
 `Business` is the tenant. Operational records are scoped to a business,
 and a user can belong to more than one business.
 
 ## Prerequisites
 
+Backend:
 - .NET SDK 9
 - SQL Server LocalDB (the default configuration uses
-  `(localdb)\mssqllocaldb`)
-- Entity Framework Core CLI:
+  `(localdb)\\mssqllocaldb`)
+- Entity Framework Core CLI
 
-```powershell
-dotnet tool install --global dotnet-ef
-```
+Frontend:
+- Node.js 20+
+- npm
 
 ## Configuration
 
 The default connection string and JWT settings are in
 `src/CustomerReturnCRM.API/appsettings.json`.
 
-The development JWT key is intentionally a placeholder and must be
-replaced before using the application outside local development.
+The frontend API base URL is configured with
+`src/CustomerReturnCRM.Web/.env.local` using the variable:
 
-Return-analysis thresholds can be configured in the same file:
+```text
+NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
+```
 
-- `ReturnAnalysis:DueSoonDays` (default: 7)
-- `ReturnAnalysis:AtRiskDays` (default: 30)
-- `ReturnAnalysis:NoRecentVisitDays` (default: 90)
+See `src/CustomerReturnCRM.Web/README.md` for frontend setup and the
+implementation sequence.
 
 ## Run locally
 
-From the repository root:
+Backend, from the repository root:
 
 ```powershell
 dotnet restore CustomerReturnCRM.sln
@@ -79,6 +97,13 @@ dotnet ef database update `
   --project src/CustomerReturnCRM.Infrastructure/CustomerReturnCRM.Infrastructure.csproj `
   --startup-project src/CustomerReturnCRM.API/CustomerReturnCRM.API.csproj
 dotnet run --project src/CustomerReturnCRM.API/CustomerReturnCRM.API.csproj
+```
+
+Frontend, from `src/CustomerReturnCRM.Web`:
+
+```bash
+npm install
+npm run dev
 ```
 
 The API uses the launch settings configured under
@@ -90,9 +115,6 @@ After starting the API, interactive API documentation is available at:
 http://localhost:5108/swagger
 ```
 
-Use the `Authorize` button in Swagger UI and enter the JWT returned by
-`/api/auth/login` as a Bearer token.
-
 ## Authentication and onboarding
 
 1. `POST /api/auth/register`
@@ -100,11 +122,8 @@ Use the `Authorize` button in Swagger UI and enter the JWT returned by
 3. Create a business with `POST /api/businesses`
 4. Use the returned business ID for business-scoped endpoints.
 
-Send the JWT returned by registration or login as:
-
-```text
-Authorization: Bearer <token>
-```
+The login response contains the JWT, expiry and the user's businesses.
+The frontend authentication client is based on this actual API contract.
 
 ## Main API areas
 
@@ -144,87 +163,7 @@ GET  /api/businesses/{businessId}/dashboard
 
 `POST /api/businesses` accepts an optional `serviceTemplateId`. When it
 is provided, the selected template is copied into the new business as
-the first service. The copied service starts with price `0` and can be
-edited afterwards.
-
-`GET /api/service-templates?businessType=...` returns active templates
-for the requested business type plus active `General` templates. The
-endpoint is read-only and templates are used only during onboarding;
-the selected template is copied into the business as a normal service.
-
-## Customer list summary
-
-Customer list and detail responses include the following visit summary
-fields in addition to the customer's stored profile data:
-
-```text
-LastVisitDate
-TotalVisits
-```
-
-`LastVisitDate` is the most recent actual `Visit.VisitAt` for the customer
-within the current business, and `TotalVisits` counts actual visits for
-that customer within the current business. Customers with no visits have
-`LastVisitDate = null` and `TotalVisits = 0`.
-
-These values are query-derived and do not introduce duplicated summary
-columns or state into the `Customer` entity.
-
-## Return analysis rules
-
-Expected return dates are calculated dynamically from the latest
-`VisitService` for each customer and service:
-
-```text
-Last visit date + SuggestedReturnDays = Expected return date
-```
-
-Expected returns and smart lists are queries, not stored entities.
-Future appointments suppress the corresponding smart-list item.
-
-Users can manually remove a current opportunity from a smart list with
-`POST /smart-lists/dismiss`. The request identifies the list type,
-customer and, for service-based lists, service:
-
-```json
-{
-  "smartListType": "Overdue",
-  "customerId": "00000000-0000-0000-0000-000000000000",
-  "serviceId": "00000000-0000-0000-0000-000000000000"
-}
-```
-
-Use `POST /smart-lists/restore` with the same payload to show the item
-again. A dismissal is tied to the current visit/return cycle; a newer
-visit creates a new analysis cycle and is not hidden by the old
-dismissal.
-
-## Database migrations
-
-Migrations live in
-`src/CustomerReturnCRM.Infrastructure/Persistence/Migrations`.
-
-After model changes, create a migration with:
-
-```powershell
-dotnet ef migrations add <MigrationName> `
-  --project src/CustomerReturnCRM.Infrastructure/CustomerReturnCRM.Infrastructure.csproj `
-  --startup-project src/CustomerReturnCRM.API/CustomerReturnCRM.API.csproj `
-  --output-dir Persistence/Migrations
-```
-
-The `AddVisits` migration creates the `Visits` and `VisitServices`
-tables required by the visit and return-analysis features.
-
-The `AddSmartListDismissals` migration creates the persistence required
-for manual smart-list dismissal and restoration.
-
-The `AddReminders` migration creates the `Reminders` table required for
-manual follow-up tasks.
-
-The `AddServiceTemplates` migration creates the service-template catalog
-and seeds the initial `General` and `BeautySalon` templates used by
-onboarding.
+the first service.
 
 ## Current MVP scope
 
@@ -242,6 +181,7 @@ Implemented:
 - Manual smart-list dismissal and restoration
 - Reminder creation, listing, completion and cancellation
 - Action-oriented dashboard query
+- Initial Next.js frontend foundation under `src/CustomerReturnCRM.Web`
 
 Not implemented yet:
 
@@ -249,6 +189,7 @@ Not implemented yet:
 - Payments, accounting and inventory
 - Branches, online booking and mobile application
 - Advanced permissions
+- Complete frontend module implementation
 
 ## Development notes
 
