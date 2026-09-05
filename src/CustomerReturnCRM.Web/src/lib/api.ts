@@ -124,6 +124,13 @@ export async function login(email: string, password: string) {
   });
 }
 
+export async function register(email: string, password: string) {
+  return apiFetch<AuthenticationResult>("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+}
+
 export async function createBusiness(request: BusinessSetupRequest) {
   return apiFetch<BusinessSetupResult>("/api/businesses", {
     method: "POST",
