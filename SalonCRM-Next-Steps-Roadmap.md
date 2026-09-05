@@ -8,7 +8,7 @@
 
 ## وضعیت فعلی
 
-چرخه اصلی محصول تا بخش Return Analysis و Smart Lists پیاده‌سازی شده است:
+چرخه اصلی محصول تا بخش Dashboard عملیاتی پیاده‌سازی شده است:
 
 ```text
 Customer
@@ -18,6 +18,8 @@ Customer
   -> VisitService Snapshot
   -> Return Analysis
   -> Smart Lists
+  -> Reminder
+  -> Operational Dashboard
 ```
 
 ساختار چهارلایه پروژه نیز ایجاد شده است:
@@ -225,28 +227,53 @@ POST /api/businesses/{businessId}/reminders/{id}/cancel
 
 ## مرحله چهارم: Dashboard عملیاتی
 
-Dashboard باید یک Query ترکیبی و action-oriented باشد، نه یک Entity جدید.
+**وضعیت: پیاده‌سازی و تکمیل شد.**
 
-### خروجی پیشنهادی
+Dashboard به‌صورت یک Query ترکیبی و action-oriented پیاده‌سازی شده و Entity یا
+Snapshot جداگانه‌ای برای آن ایجاد نشده است.
 
-- Appointmentهای امروز
-- مشتریان Due Soon
-- مشتریان Overdue
-- Reminderهای Pending
-- آخرین Visitها
-- تعداد مشتریان فعال
+### Backend
 
-### Endpoint پیشنهادی
+Endpoint فعال:
 
 ```text
 GET /api/businesses/{businessId}/dashboard
 ```
+
+خروجی فعلی شامل موارد زیر است:
+
+- Appointmentهای امروز همراه با مشتری، زمان، وضعیت و خدمات
+- Reminderهای Pending همراه با مشتری و عنوان پیگیری
+- Due Soon
+- Overdue
+- At Risk
+- No Recent Visit
+- آخرین Visitهای مشتریان فعال
+- تعداد مشتریان فعال
+
+داده‌ها مستقیماً از Queryهای عملیاتی و `IReturnAnalysisService` خوانده می‌شوند
+و برای Dashboard جدول یا cache اختصاصی ساخته نشده است.
+
+### Frontend
+
+صفحه `/dashboard` اکنون شامل موارد زیر است:
+
+- کارت‌های KPI برای مشتریان فعال، نوبت‌های امروز، پیگیری‌های باز و موارد نیازمند اقدام
+- لیست اولویت‌دار مشتریان نیازمند اقدام
+- نمایش نوبت‌های امروز
+- نمایش Reminderهای باز
+- نمایش آخرین Visitها
+- لینک مستقیم به بخش‌های عملیاتی مربوط
+- حالت‌های Loading، Empty و Error
+- طراحی responsive برای Desktop و Mobile
+- امکان تکمیل سریع Reminder از خود Dashboard و Refresh داده‌های Dashboard پس از آن
 
 ### معیار تکمیل
 
 - Dashboard پاسخ سریع و قابل استفاده برای یک کسب‌وکار کوچک داشته باشد.
 - خروجی آن از Queryهای موجود استفاده کند.
 - جدول یا Snapshot جداگانه برای Dashboard ایجاد نشود.
+- Dashboard فقط گزارش‌دهنده نباشد و حداقل یک اقدام عملی مستقیم داشته باشد.
 
 ## مرحله پنجم: تکمیل کیفیت API
 
@@ -320,9 +347,15 @@ Customer List summary
 - Reminder به‌عنوان اقدام دستی کاربر اضافه شده است؛ شامل ایجاد، فهرست،
   تکمیل و لغو.
 - Dashboard عملیاتی به‌صورت Query ترکیبی اضافه شده است؛ شامل نوبت‌های
-  امروز، Reminderهای باز، Smart Listها، Visitهای اخیر و تعداد مشتریان فعال.
+  امروز، Reminderهای باز، چهار Smart List، Visitهای اخیر و تعداد مشتریان فعال.
+- Dashboard در Frontend به یک نقطه اقدام روزانه تبدیل شده و تکمیل سریع Reminder
+  نیز از داخل آن ممکن است.
 - ServiceTemplate با Seed اولیه و اتصال اختیاری به Business Setup اضافه شده
   و وضعیت آن از `Not implemented` به `Implemented` اصلاح شده است.
 - CustomerResult اکنون `LastVisitDate` و `TotalVisits` را به‌صورت query-derived
   برای Customer List و Customer Detail ارائه می‌کند.
 - Staff management شامل مشاهده، ایجاد، ویرایش و غیرفعال‌سازی اضافه شده است.
+- Visit API و Frontend با نام مشتری و اطلاعات Staff غنی‌سازی شده‌اند.
+- Visits به Navigation اصلی برنامه اضافه شده است.
+- CI برای Backend و Frontend به Workflow پروژه اضافه شده و CORS نیز برای توسعه
+  Frontend محلی تنظیم شده است.
