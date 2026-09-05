@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { login } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
@@ -46,6 +47,13 @@ export default function LoginPage() {
         <button type="submit" disabled={loading} className="mt-6 w-full rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50">
           {loading ? "در حال ورود..." : "ورود"}
         </button>
+
+        <p className="mt-5 text-center text-sm text-slate-500">
+          حساب کاربری ندارید؟{" "}
+          <Link href="/register" className="font-semibold text-indigo-600 hover:text-indigo-700">
+            ثبت‌نام کنید
+          </Link>
+        </p>
       </form>
     </main>
   );
