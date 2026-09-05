@@ -73,6 +73,10 @@ export default function SetupPage() {
     return <main className="flex min-h-screen items-center justify-center text-sm text-slate-500">در حال آماده‌سازی...</main>;
   }
 
+  // Keep a stable, non-null reference for the async submit handler so TypeScript
+  // does not widen the context value back to AuthenticationResult | null after await.
+  const currentAuth = auth;
+
   const update = (key: keyof typeof form, value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
 
@@ -87,7 +91,7 @@ export default function SetupPage() {
       });
 
       setAuth({
-        ...auth,
+        ...currentAuth,
         businesses: [{ id: result.businessId, name: form.name.trim(), role: "Owner" }],
       });
       router.replace("/dashboard");
