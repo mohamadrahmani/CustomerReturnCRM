@@ -14,7 +14,7 @@ function ReturnCycleStatus({ days }: { days: number | null }) { return days == n
 function ReturnCycleInfo() {
   return <span className="group relative inline-flex align-middle">
     <button type="button" aria-label="اطلاعات چرخه بازگشت" className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-300 bg-white text-[11px] font-black text-slate-500 transition hover:border-pink-400 hover:text-pink-600">i</button>
-    <span role="tooltip" className="pointer-events-none invisible absolute left-0 top-7 z-50 w-64 max-w-[calc(100vw-3rem)] rounded-xl border border-slate-200 bg-slate-900 px-3 py-2.5 text-right text-[11px] font-medium leading-5 text-white opacity-0 shadow-xl transition group-hover:visible group-hover:opacity-100">اگر دوره بازگشت را وارد نکنید، سیستم نمی‌تواند تاریخ بازگشت مورد انتظار را محاسبه کند و تحلیل بازگشت برای این خدمت انجام نمی‌شود.</span>
+    <span role="tooltip" className="pointer-events-none invisible absolute left-1/2 top-7 z-50 w-64 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-slate-200 bg-slate-900 px-3 py-2.5 text-right text-[11px] font-medium leading-5 text-white opacity-0 shadow-xl transition group-hover:visible group-hover:opacity-100">اگر دوره بازگشت را وارد نکنید، سیستم نمی‌تواند تاریخ بازگشت مورد انتظار را محاسبه کند و تحلیل بازگشت برای این خدمت انجام نمی‌شود.</span>
   </span>;
 }
 
