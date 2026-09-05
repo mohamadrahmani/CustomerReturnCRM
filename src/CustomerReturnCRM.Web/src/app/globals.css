@@ -17,6 +17,7 @@ body {
 button, input, select, textarea { font: inherit; }
 button, a, select { -webkit-tap-highlight-color: transparent; }
 
+/* Customer avatar silhouette: decorative, deterministic, and never derived from the customer's name. */
 @layer components {
   .crm-card { @apply rounded-2xl border border-slate-200/80 bg-white shadow-sm; }
   .crm-section-title { @apply text-base font-bold tracking-tight text-slate-900; }
@@ -24,4 +25,35 @@ button, a, select { -webkit-tap-highlight-color: transparent; }
   .crm-action { @apply inline-flex min-h-10 items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:cursor-not-allowed disabled:opacity-60; }
   .crm-secondary-action { @apply inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20; }
   .crm-icon-box { @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-extrabold; }
+}
+
+/* The dashboard Avatar component uses these stable utility combinations. */
+span[aria-hidden="true"].h-11.w-11.rounded-full,
+span[aria-hidden="true"].h-9.w-9.rounded-full {
+  position: relative;
+  overflow: hidden;
+}
+
+span[aria-hidden="true"].h-11.w-11.rounded-full > svg,
+span[aria-hidden="true"].h-9.w-9.rounded-full > svg {
+  display: none;
+}
+
+span[aria-hidden="true"].h-11.w-11.rounded-full::before,
+span[aria-hidden="true"].h-9.w-9.rounded-full::before {
+  content: "";
+  display: block;
+  width: 82%;
+  height: 82%;
+  background-color: currentColor;
+  opacity: .95;
+  -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iIzAwMCIgZD0iTTM5LjUgMzkuOGMtMS4xLTYuMy01LjItMTAuNy0xMC44LTEyLjMgMi45LTIuMSA0LjgtNS40IDQuOC05LjMgMC02LjQtNC45LTExLjYtMTEtMTEuNi01LjcgMC0xMC4zIDQuNi0xMC45IDEwLjUtLjQgMy45LjggNy4zIDMuMSA5LjgtMS45IDEuMS0zLjYgMi43LTUgNC42LTEuOCAyLjQtMyA1LjItMy41IDguMyA0LjEtMS4yIDcuMS0zLjIgOS43LTYuMSAyLjItMi41IDMuNy01LjIg٤٫٨LT٨٫٢ ١٫٣ ١٫٥ ٣٫٢ ٢٫٤ ٥٫٤ ٢٫٤ ٢٫٧ ٠ ٥-١٫٤ ٦٫٢-٣٫٥-.٢ ٣٫٨-٢٫٢ ٦٫٩-٥٫٣ ٨٫٩ ٦٫١٫٥ ١٠٫١ ٢٫٨ ١٢٫٥ ٦٫٥zT١٣٫٢ ١٥٫٨c١٫٣-٣٫٧ ٤٫٤-٦٫٢ ٨٫٤-٦٫٢ ٤٫٧ ٠ ٨٫٤ ٣٫٩ ٨٫٤ ٨٫٨ ٠ .٨-.١ ١٫٦-.٣ ٢٫٤-.٩-٢-٢٫٧-٣٫٥-٥٫١-٤٫٢-٢٫٦ ١٫٨-٦٫١ ٢٫٤-١٠٫٢ ١٫٤-.٧-.٢-١٫١-.٨-١٫٢-٢٫٢z"/>
+  );
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iIzAwMCIgZD0iTTM5LjUgMzkuOGMtMS4xLTYuMy01LjItMTAuNy0xMC44LTEyLjMgMi45LTIuMSA0LjgtNS40IDQuOC05LjMgMC02LjQtNC45LTExLjYtMTEtMTEuNi01LjcgMC0xMC4zIDQuNi0xMC45IDEwLjUtLjQgMy45LjggNy4zIDMuMSA5LjgtMS45IDEuMS0zLjYgMi43LTUgNC42LTEuOCAyLjQtMyA1LjItMy5IDguMyA0LjEtMS4yIDcuMS0zLjIgOS43LTYuMSAyLjItMi41IDMu٧-٥٫٢ ٤٫٨-٨٫٢ ١٫٣ ١٫٥ ٣٫٢ ٢٫٤ ٥٫٤ ٢٫٤ ٢٫٧ ٠ ٥-١٫٤ ٦٫٢-٣٫٥-.٢ ٣٫٨-٢٫٢ ٦٫٩-٥٫٣ ٨٫٩ ٦٫١٫٥ ١٠٫١ ٢٫٨ ١٢٫٥ ٦٫٥z"/>
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
 }
