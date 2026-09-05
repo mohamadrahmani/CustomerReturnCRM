@@ -8,9 +8,21 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; }
+html { background: #f6f7fb; }
 body {
   background: #f6f7fb;
   color: #172033;
   font-family: Arial, Tahoma, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 button, input, select, textarea { font: inherit; }
+button, a, select { -webkit-tap-highlight-color: transparent; }
+
+@layer components {
+  .crm-card { @apply rounded-2xl border border-slate-200/80 bg-white shadow-sm; }
+  .crm-section-title { @apply text-base font-bold tracking-tight text-slate-900; }
+  .crm-muted { @apply text-sm leading-6 text-slate-500; }
+  .crm-action { @apply inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:cursor-not-allowed disabled:opacity-60; }
+  .crm-secondary-action { @apply inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20; }
+}
