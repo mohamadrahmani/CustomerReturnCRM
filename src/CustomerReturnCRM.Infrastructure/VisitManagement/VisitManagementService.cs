@@ -9,39 +9,29 @@ namespace CustomerReturnCRM.Infrastructure.VisitManagement;
 public sealed class VisitManagementService : IVisitManagementService
 {
     private readonly ApplicationDbContext _dbContext;
-
     public VisitManagementService(ApplicationDbContext dbContext) => _dbContext = dbContext;
 
     public async Task<VisitResult> CreateAsync(Guid businessId, Guid userId, CreateVisitRequest request, CancellationToken cancellationToken = default)
     {
         await EnsureMemberAsync(businessId, userId, cancellationToken);
         Validate(request.VisitAt, request.TotalAmount, request.Services);
-        var references = await LoadReferencesAsync(businessId, request.CustomerId, request.Services, cancellationToken, requireActive: true);
-        var visit = new Visit
-        {
-            Id = Guid.NewGuid(), BusinessId = businessId, CustomerId = request.CustomerId,
-            VisitAt = request.VisitAt, TotalAmount = request.TotalAmount, Note = Normalize(request.Note),
-            CreatedAt = DateTime.UtcNow
-        };
+        var references = await LoadReferencesAsync(businessId, request.CustomerId, request.Services, cancellationToken, true);
+        var visit = new Visit { Id = Guid.NewGuid(), BusinessId = businessId, CustomerId = request.CustomerId, VisitAt = request.VisitAt, TotalAmount = request.TotalAmount, Note = Normalize(request.Note), CreatedAt = DateTime.UtcNow };
         foreach (var item in request.Services)
         {
             var service = references.Services[item.ServiceId];
-            visit.VisitServices.Add(new VisitService
-            {
-                Id = Guid.NewGuid(), VisitId = visit.Id, ServiceId = service.Id, StaffId = item.StaffId,
-                ServiceTitle = service.Title, Price = service.DefaultPrice, DurationMinutes = service.DefaultDurationMinutes,
-                SuggestedReturnDays = service.SuggestedReturnDays
-            });
+            visit.VisitServices.Add(new VisitService { Id = Guid.NewGuid(), VisitId = visit.Id, ServiceId = service.Id, StaffId = item.StaffId, ServiceTitle = service.Title, Price = service.DefaultPrice, DurationMinutes = service.DefaultDurationMinutes, SuggestedReturnDays = service.SuggestedReturnDays });
         }
         _dbContext.Visits.Add(visit);
         await _dbContext.SaveChangesAsync(cancellationToken);
+        await LoadDetailsAsync(visit, cancellationToken);
         return ToResult(visit);
     }
 
     public async Task<PagedResult<VisitResult>> ListAsync(Guid businessId, Guid userId, DateTime? from, DateTime? to, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default)
     {
         await EnsureMemberAsync(businessId, userId, cancellationToken);
-        var query = _dbContext.Visits.AsNoTracking().Include(x => x.VisitServices).Where(x => x.BusinessId == businessId);
+        var query = _dbContext.Visits.AsNoTracking().Include(x => x.Customer).Include(x => x.VisitServices).ThenInclude(x => x.Staff).Where(x => x.BusinessId == businessId);
         if (from.HasValue) query = query.Where(x => x.VisitAt >= from.Value);
         if (to.HasValue) query = query.Where(x => x.VisitAt < to.Value);
         (page, pageSize) = Pagination.Normalize(page, pageSize);
@@ -53,7 +43,7 @@ public sealed class VisitManagementService : IVisitManagementService
     public async Task<VisitResult?> GetAsync(Guid businessId, Guid visitId, Guid userId, CancellationToken cancellationToken = default)
     {
         await EnsureMemberAsync(businessId, userId, cancellationToken);
-        var visit = await _dbContext.Visits.AsNoTracking().Include(x => x.VisitServices).SingleOrDefaultAsync(x => x.BusinessId == businessId && x.Id == visitId, cancellationToken);
+        var visit = await _dbContext.Visits.AsNoTracking().Include(x => x.Customer).Include(x => x.VisitServices).ThenInclude(x => x.Staff).SingleOrDefaultAsync(x => x.BusinessId == businessId && x.Id == visitId, cancellationToken);
         return visit is null ? null : ToResult(visit);
     }
 
@@ -66,32 +56,19 @@ public sealed class VisitManagementService : IVisitManagementService
         if (appointment.Status == AppointmentStatus.Completed) throw new InvalidOperationException("The appointment has already been completed.");
         if (appointment.Status is AppointmentStatus.Cancelled or AppointmentStatus.NoShow) throw new InvalidOperationException("Cancelled or no-show appointments cannot be completed.");
         if (appointment.AppointmentServices.Count == 0) throw new InvalidOperationException("The appointment has no services to record as a visit.");
-
         var serviceIds = appointment.AppointmentServices.Select(x => x.ServiceId).Distinct().ToList();
         var suggestedReturns = await _dbContext.Services.Where(x => x.BusinessId == businessId && serviceIds.Contains(x.Id)).ToDictionaryAsync(x => x.Id, x => x.SuggestedReturnDays, cancellationToken);
         if (suggestedReturns.Count != serviceIds.Count) throw new InvalidOperationException("A service on the appointment no longer belongs to the business.");
-
         await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-        var visit = new Visit
-        {
-            Id = Guid.NewGuid(), BusinessId = businessId, CustomerId = appointment.CustomerId, AppointmentId = appointment.Id,
-            VisitAt = request.VisitAt ?? DateTime.UtcNow, TotalAmount = request.TotalAmount,
-            Note = Normalize(request.Note) ?? appointment.Note, CreatedAt = DateTime.UtcNow
-        };
+        var visit = new Visit { Id = Guid.NewGuid(), BusinessId = businessId, CustomerId = appointment.CustomerId, AppointmentId = appointment.Id, VisitAt = request.VisitAt ?? DateTime.UtcNow, TotalAmount = request.TotalAmount, Note = Normalize(request.Note) ?? appointment.Note, CreatedAt = DateTime.UtcNow };
         foreach (var item in appointment.AppointmentServices)
-        {
-            visit.VisitServices.Add(new VisitService
-            {
-                Id = Guid.NewGuid(), VisitId = visit.Id, ServiceId = item.ServiceId, StaffId = item.StaffId,
-                ServiceTitle = item.ServiceTitle, Price = item.Price, DurationMinutes = item.DurationMinutes,
-                SuggestedReturnDays = suggestedReturns[item.ServiceId]
-            });
-        }
+            visit.VisitServices.Add(new VisitService { Id = Guid.NewGuid(), VisitId = visit.Id, ServiceId = item.ServiceId, StaffId = item.StaffId, ServiceTitle = item.ServiceTitle, Price = item.Price, DurationMinutes = item.DurationMinutes, SuggestedReturnDays = suggestedReturns[item.ServiceId] });
         appointment.Status = AppointmentStatus.Completed;
         appointment.UpdatedAt = DateTime.UtcNow;
         _dbContext.Visits.Add(visit);
         await _dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        await LoadDetailsAsync(visit, cancellationToken);
         return ToResult(visit);
     }
 
@@ -120,11 +97,18 @@ public sealed class VisitManagementService : IVisitManagementService
         if (visitAt == default) throw new ArgumentException("Visit date is required.");
         if (totalAmount is < 0) throw new ArgumentException("Total amount cannot be negative.");
         if (services.Count == 0) throw new ArgumentException("A visit requires at least one service.");
-        if (services.Any(x => x.ServiceId == Guid.Empty || x.StaffId == Guid.Empty)) throw new ArgumentException("Service and staff are required for every visit service.");
+        if (services.Any(x => x.ServiceId == Guid.Empty || x.StaffId == Guid.Empty)) throw new ArgumentException("Service and staff are required for every visit.");
         if (services.Select(x => x.ServiceId).Distinct().Count() != services.Count) throw new ArgumentException("A visit cannot contain the same service more than once.");
     }
 
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    private static VisitResult ToResult(Visit x) => new(x.Id, x.BusinessId, x.CustomerId, x.AppointmentId, x.VisitAt, x.TotalAmount, x.Note, x.CreatedAt, x.UpdatedAt, x.VisitServices.Select(y => new VisitServiceResult(y.Id, y.ServiceId, y.StaffId, y.ServiceTitle, y.Price, y.DurationMinutes, y.SuggestedReturnDays)).ToList());
+    private static async Task LoadDetailsAsync(ApplicationDbContext db, Visit visit, CancellationToken cancellationToken) { await db.Entry(visit).Reference(x => x.Customer).LoadAsync(cancellationToken); foreach (var item in visit.VisitServices) await db.Entry(item).Reference(x => x.Staff).LoadAsync(cancellationToken); }
+    private async Task LoadDetailsAsync(Visit visit, CancellationToken cancellationToken) => await LoadDetailsAsync(_dbContext, visit, cancellationToken);
+
+    private static VisitResult ToResult(Visit x) => new(
+        x.Id, x.BusinessId, x.CustomerId, $"{x.Customer.FirstName} {x.Customer.LastName}".Trim(), x.Customer.Mobile,
+        x.AppointmentId, x.VisitAt, x.TotalAmount, x.Note, x.CreatedAt, x.UpdatedAt,
+        x.VisitServices.Select(y => new VisitServiceResult(y.Id, y.ServiceId, y.StaffId, y.ServiceTitle, y.Price, y.DurationMinutes, y.SuggestedReturnDays, $"{y.Staff.FirstName} {y.Staff.LastName}".Trim(), y.Staff.Mobile)).ToList());
+
     private sealed record ReferenceData(IReadOnlyDictionary<Guid, Service> Services);
 }
