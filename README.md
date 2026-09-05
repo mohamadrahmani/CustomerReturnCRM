@@ -81,7 +81,7 @@ The frontend API base URL is configured with
 `src/CustomerReturnCRM.Web/.env.local` using the variable:
 
 ```text
-NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:5108
 ```
 
 See `src/CustomerReturnCRM.Web/README.md` for frontend setup and the
@@ -115,84 +115,21 @@ After starting the API, interactive API documentation is available at:
 http://localhost:5108/swagger
 ```
 
+## CI
+
+GitHub Actions validates both applications on pushes and pull requests
+to `main`:
+
+- Backend: restore and Release build with .NET 9.
+- Frontend: install dependencies and run the Next.js production build
+  with Node.js 20.
+
+The workflow is defined in `.github/workflows/ci.yml`.
+
 ## Authentication and onboarding
 
 1. `POST /api/auth/register`
 2. `POST /api/auth/login`
-3. Create a business with `POST /api/businesses`
-4. Use the returned business ID for business-scoped endpoints.
-
-The login response contains the JWT, expiry and the user's businesses.
-The frontend authentication client is based on this actual API contract.
-
-## Main API areas
-
-```text
-POST /api/auth/register
-POST /api/auth/login
-
-POST /api/businesses
-GET  /api/service-templates?businessType=BeautySalon
-
-/api/businesses/{businessId}/customers
-/api/businesses/{businessId}/services
-/api/businesses/{businessId}/staff
-/api/businesses/{businessId}/appointments
-/api/businesses/{businessId}/visits
-
-POST /api/businesses/{businessId}/appointments/{appointmentId}/complete
-
-GET /api/businesses/{businessId}/return-analysis/customers/{customerId}
-
-GET /api/businesses/{businessId}/smart-lists/overdue
-GET /api/businesses/{businessId}/smart-lists/due-soon
-GET /api/businesses/{businessId}/smart-lists/at-risk
-GET /api/businesses/{businessId}/smart-lists/no-recent-visit
-
-POST /api/businesses/{businessId}/smart-lists/dismiss
-POST /api/businesses/{businessId}/smart-lists/restore
-
-GET  /api/businesses/{businessId}/reminders
-GET  /api/businesses/{businessId}/reminders/{reminderId}
-POST /api/businesses/{businessId}/reminders
-POST /api/businesses/{businessId}/reminders/{reminderId}/complete
-POST /api/businesses/{businessId}/reminders/{reminderId}/cancel
-
-GET  /api/businesses/{businessId}/dashboard
-```
-
-`POST /api/businesses` accepts an optional `serviceTemplateId`. When it
-is provided, the selected template is copied into the new business as
-the first service.
-
-## Current MVP scope
-
-Implemented:
-
-- Registration, login and JWT authentication
-- Business setup with owner membership and staff
-- Service templates for onboarding, including initial seeded templates
-- Customer and service management
-- Customer list visit summary (`LastVisitDate`, `TotalVisits`)
-- Appointment management
-- Appointment completion into a visit
-- Direct walk-in visit creation
-- Return analysis and four smart lists
-- Manual smart-list dismissal and restoration
-- Reminder creation, listing, completion and cancellation
-- Action-oriented dashboard query
-- Initial Next.js frontend foundation under `src/CustomerReturnCRM.Web`
-
-Not implemented yet:
-
-- SMS and automatic messaging
-- Payments, accounting and inventory
-- Branches, online booking and mobile application
-- Advanced permissions
-- Complete frontend module implementation
-
-## Development notes
-
-Keep business data scoped by `BusinessId`, preserve historical snapshots
-in appointment and visit services, and avoid adding features outside the
-MVP without an explicit product decision.
+3. The login response contains the JWT and the user's businesses.
+4. The frontend uses the selected business as the active tenant context.
+5. If the user has no business, onboarding creates the first business.
