@@ -12,20 +12,24 @@ public sealed class ServiceManagementService : IServiceManagementService
 
     public ServiceManagementService(ApplicationDbContext dbContext) => _dbContext = dbContext;
 
-    public async Task<PagedResult<ServiceResult>> ListAsync(Guid businessId, Guid userId, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<ServiceResult>> ListAsync(Guid businessId, Guid userId, int page = 1, int pageSize = 20, string? search = null, bool? isActive = true, CancellationToken cancellationToken = default)
     {
         await EnsureMemberAsync(businessId, userId, cancellationToken);
         (page, pageSize) = Pagination.Normalize(page, pageSize);
-        var query = _dbContext.Services.Where(x => x.BusinessId == businessId && x.IsActive);
+        var query = _dbContext.Services.AsNoTracking().Where(x => x.BusinessId == businessId);
+        if (isActive.HasValue) query = query.Where(x => x.IsActive == isActive.Value);
+        var normalizedSearch = search?.Trim();
+        if (!string.IsNullOrWhiteSpace(normalizedSearch))
+            query = query.Where(x => x.Title.Contains(normalizedSearch) || (x.Description != null && x.Description.Contains(normalizedSearch)));
         var total = await query.CountAsync(cancellationToken);
-        var items = await query.OrderBy(x => x.Title).Skip((page - 1) * pageSize).Take(pageSize).Select(x => ToResult(x)).ToListAsync(cancellationToken);
+        var items = await query.OrderBy(x => x.Title).ThenBy(x => x.Id).Skip((page - 1) * pageSize).Take(pageSize).Select(x => ToResult(x)).ToListAsync(cancellationToken);
         return Pagination.Create(items, page, pageSize, total);
     }
 
     public async Task<ServiceResult?> GetAsync(Guid businessId, Guid serviceId, Guid userId, CancellationToken cancellationToken = default)
     {
         await EnsureMemberAsync(businessId, userId, cancellationToken);
-        return await _dbContext.Services.Where(x => x.BusinessId == businessId && x.Id == serviceId && x.IsActive).Select(x => ToResult(x)).SingleOrDefaultAsync(cancellationToken);
+        return await _dbContext.Services.AsNoTracking().Where(x => x.BusinessId == businessId && x.Id == serviceId).Select(x => ToResult(x)).SingleOrDefaultAsync(cancellationToken);
     }
 
     public async Task<ServiceResult> CreateAsync(Guid businessId, Guid userId, CreateServiceRequest request, CancellationToken cancellationToken = default)
