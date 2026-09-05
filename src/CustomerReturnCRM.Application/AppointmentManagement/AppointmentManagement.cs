@@ -40,4 +40,5 @@ public interface IAppointmentManagementService
     Task<AppointmentResult?> UpdateAsync(Guid businessId, Guid appointmentId, Guid userId, UpdateAppointmentRequest request, CancellationToken cancellationToken = default);
     Task<AppointmentResult?> ConfirmAsync(Guid businessId, Guid appointmentId, Guid userId, CancellationToken cancellationToken = default);
     Task<AppointmentResult?> CancelAsync(Guid businessId, Guid appointmentId, Guid userId, CancellationToken cancellationToken = default);
+    Task<AppointmentResult?> MarkNoShowAsync(Guid businessId, Guid appointmentId, Guid userId, CancellationToken cancellationToken = default);
 }
