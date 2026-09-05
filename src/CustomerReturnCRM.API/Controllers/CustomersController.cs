@@ -11,7 +11,7 @@ namespace CustomerReturnCRM.API.Controllers;
 public sealed class CustomersController : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<object>> List(Guid businessId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null, [FromQuery] bool? isActive = true, [FromServices] ICustomerManagementService service = null!, CancellationToken cancellationToken = default)
+    public async Task<ActionResult<object>> List(Guid businessId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null, [FromQuery] bool? isActive = null, [FromServices] ICustomerManagementService service = null!, CancellationToken cancellationToken = default)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
         try { return Ok(await service.ListAsync(businessId, userId, page, pageSize, search, isActive, cancellationToken)); }
