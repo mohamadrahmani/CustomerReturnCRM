@@ -1,7 +1,7 @@
 # SalonCRM / CustomerReturnCRM
 ## نقشه راه ادامه توسعه
 
-تاریخ تهیه: ۳ سپتامبر ۲۰۲۶
+تاریخ تهیه: ۵ سپتامبر ۲۰۲۶
 
 این سند پیشنهاد اجرایی برای ادامه توسعه پروژه CustomerReturnCRM بر اساس
 اسناد محصول، معماری MVP و وضعیت فعلی کد است.
@@ -29,8 +29,8 @@ Infrastructure
 API
 ```
 
-Migration مربوط به `Visit` و `VisitService` نیز اضافه شده و Build پروژه
-با موفقیت انجام شده است.
+Migration مربوط به `Visit` و `VisitService` و همچنین Migration مربوط به
+`ServiceTemplate` اضافه شده‌اند.
 
 ## اصل راهبردی
 
@@ -46,6 +46,41 @@ Migration مربوط به `Visit` و `VisitService` نیز اضافه شده و 
 
 از اضافه‌کردن قابلیت‌هایی که خارج از محدوده MVP هستند خودداری شود؛ از جمله
 پرداخت، حسابداری، انبار، SMS، کمپین، شعب و اپلیکیشن موبایل.
+
+## اصلاحات انجام‌شده پیش از Frontend
+
+### Customer List
+
+Customer API اکنون در `CustomerResult` دو مقدار query-derived ارائه می‌کند:
+
+```text
+LastVisitDate
+TotalVisits
+```
+
+`LastVisitDate` آخرین `Visit.VisitAt` مشتری در همان Business است و
+`TotalVisits` تعداد Visitهای واقعی همان مشتری در همان Business است.
+برای مشتری بدون Visit مقدار `LastVisitDate` برابر `null` و مقدار
+`TotalVisits` برابر `0` است.
+
+این اطلاعات به Entity مشتری اضافه نشده‌اند و در زمان Query محاسبه می‌شوند.
+در نتیجه تاریخچه Visit به‌عنوان منبع حقیقت باقی می‌ماند و داده summary
+تکراری در Customer ذخیره نمی‌شود.
+
+### ServiceTemplate
+
+ServiceTemplate بررسی شد و مشخص شد که قبلاً واقعاً پیاده‌سازی شده است:
+
+- Entity و EF Core model وجود دارد.
+- Migration `AddServiceTemplates` وجود دارد.
+- Seed اولیه برای `General` و `BeautySalon` وجود دارد.
+- `GET /api/service-templates?businessType=...` پیاده‌سازی شده است.
+- Business Setup می‌تواند `serviceTemplateId` دریافت کند.
+- Template انتخاب‌شده به‌صورت یک Service معمولی در Business کپی می‌شود.
+- Template پس از Copy به Business Service متصل باقی نمی‌ماند.
+
+بنابراین تناقض موجود در README اصلاح شد و ServiceTemplate اکنون در وضعیت
+Implemented قرار دارد.
 
 ## مرحله اول: تثبیت وضعیت فعلی
 
@@ -65,6 +100,7 @@ Migration مربوط به `Visit` و `VisitService` نیز اضافه شده و 
    Register
    -> Login
    -> Create Business
+   -> Select ServiceTemplate (optional)
    -> Create Customer
    -> Create Service
    -> Create Appointment
@@ -230,14 +266,16 @@ GET /api/businesses/{businessId}/dashboard
 
 ## مرحله ششم: قابلیت‌های بعدی
 
-این موارد بعد از تثبیت MVP بررسی شوند:
+ServiceTemplate و Customer List summary دیگر در این بخش نیستند؛ هر دو قبل
+از شروع Frontend تثبیت شده‌اند.
 
-1. ServiceTemplate برای Onboarding
-2. پروفایل کامل‌تر مشتری
-3. گزارش‌های پایه
-4. تخصیص Reminder به User
-5. Permissionهای دقیق‌تر
-6. SMS و کانال‌های ارتباطی
+موارد باقی‌مانده بعد از تثبیت MVP:
+
+1. پروفایل کامل‌تر مشتری
+2. گزارش‌های پایه
+3. تخصیص Reminder به User
+4. Permissionهای دقیق‌تر
+5. SMS و کانال‌های ارتباطی
 
 هیچ‌کدام از این موارد نباید قبل از تثبیت چرخه MVP وارد توسعه اصلی شوند.
 
@@ -252,32 +290,24 @@ GET /api/businesses/{businessId}/dashboard
 - تست Return Analysis و چهار Smart List
 - تست Dismiss و Restore آیتم‌های Smart List
 - تست Reminder و Dashboard
+- تست Customer List شامل `LastVisitDate` و `TotalVisits`
+- تست ServiceTemplate در Business Setup
 - بررسی خطاهای API، Pagination و Validation
 
 ## ترتیب نهایی پیشنهادی
 
 ```text
-Database Update
+Customer List summary
+  -> ServiceTemplate verification
+  -> Database Update
   -> اصلاح Return Analysis
   -> Reminder
   -> Dashboard
   -> API Quality
-  -> ServiceTemplate و قابلیت‌های بعدی
   -> Smoke Tests
   -> Integration Tests
+  -> Frontend
 ```
-
-## اولین کار پیشنهادی
-
-اولین گام عملی این است:
-
-1. اجرای `dotnet ef database update`
-2. ثبت یک داده آزمایشی از مسیر کامل
-3. بررسی چهار Smart List
-4. تبدیل یکی از نتایج به Reminder پس از پیاده‌سازی آن
-
-تا زمانی که این مسیر کامل و تست‌شده نباشد، توسعه قابلیت‌های جانبی توصیه
-نمی‌شود.
 
 ## وضعیت اصلاحات انجام‌شده
 
@@ -291,5 +321,8 @@ Database Update
   تکمیل و لغو.
 - Dashboard عملیاتی به‌صورت Query ترکیبی اضافه شده است؛ شامل نوبت‌های
   امروز، Reminderهای باز، Smart Listها، Visitهای اخیر و تعداد مشتریان فعال.
-- ServiceTemplate با Seed اولیه و اتصال اختیاری به Business Setup اضافه شده است.
+- ServiceTemplate با Seed اولیه و اتصال اختیاری به Business Setup اضافه شده
+  و وضعیت آن از `Not implemented` به `Implemented` اصلاح شده است.
+- CustomerResult اکنون `LastVisitDate` و `TotalVisits` را به‌صورت query-derived
+  برای Customer List و Customer Detail ارائه می‌کند.
 - Staff management شامل مشاهده، ایجاد، ویرایش و غیرفعال‌سازی اضافه شده است.
