@@ -29,14 +29,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-slate-50 md:flex">
       <aside className="hidden w-64 shrink-0 bg-slate-950 px-4 py-6 text-white md:flex md:flex-col">
         <Brand />
-        <nav className="mt-8 space-y-1.5">
-          {navigation.map((item) => <NavItem key={item.href} item={item} active={pathname === item.href} />)}
-        </nav>
-        <div className="mt-auto border-t border-white/10 pt-4">
-          <button onClick={handleLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-right text-sm text-slate-400 transition hover:bg-white/5 hover:text-white">
-            <Icon name="logout" className="h-4 w-4" /><span>خروج از حساب</span>
-          </button>
-        </div>
+        <nav className="mt-8 space-y-1.5">{navigation.map((item) => <NavItem key={item.href} item={item} active={pathname === item.href} />)}</nav>
+        <div className="mt-auto border-t border-white/10 pt-4"><button onClick={handleLogout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-right text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"><Icon name="logout" className="h-4 w-4" /><span>خروج از حساب</span></button></div>
       </aside>
 
       {mobileOpen && <button aria-label="بستن منو" onClick={closeMobile} className="fixed inset-0 z-30 bg-slate-950/40 md:hidden" />}
@@ -51,10 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3">
               <button onClick={() => setMobileOpen(true)} className="order-2 flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 md:hidden" aria-label="باز کردن منو"><Icon name="menu" className="h-5 w-5" /></button>
-              <div className="min-w-0">
-                <p className="text-[10px] font-medium text-slate-400">کسب‌وکار فعال</p>
-                {auth?.businesses.length ? <select aria-label="انتخاب کسب‌وکار" value={businessId ?? auth.businesses[0].id} onChange={(event) => setBusinessId(event.target.value)} className="mt-0.5 max-w-[220px] bg-transparent text-sm font-extrabold text-slate-800 outline-none">{auth.businesses.map((business) => <option key={business.id} value={business.id}>{business.name}</option>)}</select> : <p className="text-sm font-semibold">بدون کسب‌وکار</p>}
-              </div>
+              <div className="min-w-0"><p className="text-[10px] font-medium text-slate-400">کسب‌وکار فعال</p>{auth?.businesses.length ? <select aria-label="انتخاب کسب‌وکار" value={businessId ?? auth.businesses[0].id} onChange={(event) => setBusinessId(event.target.value)} className="mt-0.5 max-w-[220px] bg-transparent text-sm font-extrabold text-slate-800 outline-none">{auth.businesses.map((business) => <option key={business.id} value={business.id}>{business.name}</option>)}</select> : <p className="text-sm font-semibold">بدون کسب‌وکار</p>}</div>
             </div>
             <div className="flex items-center gap-3"><span className="hidden rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 sm:inline-flex">{activeBusiness?.role ?? ""}</span><button onClick={handleLogout} className="hidden rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 md:inline-flex">خروج</button></div>
           </div>
@@ -72,10 +63,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 }
 
 function Brand() { return <div><p className="text-sm font-bold tracking-tight text-white">Customer Return CRM</p><p className="mt-1 text-xs text-slate-500">مدیریت مشتری و بازگشت</p></div>; }
-
 function NavItem({ item, active }: { item: typeof navigation[number]; active: boolean }) { return <Link href={item.href} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${active ? "bg-indigo-500/15 font-semibold text-white ring-1 ring-indigo-400/10" : "text-slate-400 hover:bg-white/5 hover:text-slate-100"}`}><span className={`flex h-8 w-8 items-center justify-center rounded-lg ${active ? "bg-indigo-500/20 text-indigo-300" : "text-slate-500"}`}><Icon name={item.icon} className="h-4 w-4" /></span>{item.label}</Link>; }
-
-function BottomNavItem({ item, active }: { item: typeof navigation[number]; active: boolean }) { return <Link href={item.href} className={`flex min-h-[58px] flex-col items-center justify-center gap-1 text-[11px] ${active ? "font-bold text-indigo-600" : "font-medium text-slate-500"}`}><span className={`flex h-7 w-9 items-center justify-center rounded-full ${active ? "bg-indigo-50" : "bg-transparent"}`}><Icon name={item.icon} className="h-4.5 w-4.5" /></span><span>{item.label}</span></Link>; }
+function BottomNavItem({ item, active }: { item: typeof navigation[number]; active: boolean }) { return <Link href={item.href} className={`flex min-h-[58px] flex-col items-center justify-center gap-1 text-[11px] ${active ? "font-bold text-indigo-600" : "font-medium text-slate-500"}`}><span className={`flex h-7 w-9 items-center justify-center rounded-full ${active ? "bg-indigo-50" : "bg-transparent"}`}><Icon name={item.icon} className="h-4 w-4" /></span><span>{item.label}</span></Link>; }
 
 function Icon({ name, className = "h-5 w-5" }: { name: string; className?: string }) {
   const common = { className, fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, viewBox: "0 0 24 24", "aria-hidden": true };
