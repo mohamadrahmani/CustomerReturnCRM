@@ -21,7 +21,19 @@ public sealed class UpdateCustomerRequest
     public bool IsActive { get; init; } = true;
 }
 
-public sealed record CustomerResult(Guid Id, Guid BusinessId, string FirstName, string? LastName, string Mobile, DateTime? BirthDate, string? Note, bool IsActive, DateTime CreatedAt, DateTime? UpdatedAt);
+public sealed record CustomerResult(
+    Guid Id,
+    Guid BusinessId,
+    string FirstName,
+    string? LastName,
+    string Mobile,
+    DateTime? BirthDate,
+    string? Note,
+    bool IsActive,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt,
+    DateTime? LastVisitDate,
+    int TotalVisits);
 
 public interface ICustomerManagementService
 {
