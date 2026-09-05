@@ -9,6 +9,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+var frontendOrigin = builder.Configuration["Frontend:Origin"] ?? "http://localhost:3000";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        policy.WithOrigins(frontendOrigin)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwtSection["Key"] ?? throw new InvalidOperationException("JWT signing key is not configured.");
 builder.Services.AddAuthentication(options =>
@@ -74,6 +85,7 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "CustomerReturnCRM API v1");
     options.RoutePrefix = "swagger";
 });
+app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
