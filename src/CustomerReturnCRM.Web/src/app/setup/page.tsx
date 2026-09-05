@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth-provider";
-import { createBusiness, apiFetch } from "@/lib/api";
+import { apiFetch, createBusiness } from "@/lib/api";
 
 type ServiceTemplate = {
   id: string;
@@ -45,9 +45,7 @@ export default function SetupPage() {
       router.replace("/login");
       return;
     }
-    if (auth.businesses.length > 0) {
-      router.replace("/dashboard");
-    }
+    if (auth.businesses.length > 0) router.replace("/dashboard");
   }, [auth, isReady, router]);
 
   useEffect(() => {
@@ -83,16 +81,15 @@ export default function SetupPage() {
     setError("");
     setSubmitting(true);
     try {
-      await createBusiness({
+      const result = await createBusiness({
         ...form,
         serviceTemplateId: form.serviceTemplateId || undefined,
       });
 
-      const refreshed = await apiFetch<{ businesses: typeof auth.businesses }>("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email: auth.email, password: "" }),
+      setAuth({
+        ...auth,
+        businesses: [{ id: result.businessId, name: form.name.trim(), role: "Owner" }],
       });
-      setAuth({ ...auth, businesses: refreshed.businesses });
       router.replace("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "ایجاد کسب‌وکار انجام نشد.");
@@ -138,7 +135,7 @@ export default function SetupPage() {
 
           <section className="border-t border-slate-100 pt-6">
             <h2 className="font-bold">خدمت اولیه</h2>
-            <p className="mt-1 text-sm text-slate-500">اختیاری؛ این مورد فقط به‌عنوان اولین خدمت کسب‌وکار ساخته می‌شود.</p>
+            <p className="mt-1 text-sm text-slate-500">اختیاری؛ این مورد به‌عنوان اولین خدمت کسب‌وکار ساخته می‌شود.</p>
             <select value={form.serviceTemplateId} onChange={(e) => update("serviceTemplateId", e.target.value)} disabled={loadingTemplates || templates.length === 0} className="mt-4 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-indigo-500 disabled:bg-slate-50">
               <option value="">بدون خدمت اولیه</option>
               {templates.map((template) => <option key={template.id} value={template.id}>{template.title} · {template.defaultDurationMinutes} دقیقه</option>)}
