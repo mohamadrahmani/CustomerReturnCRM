@@ -1,6 +1,6 @@
 import { readAuth } from "./auth";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5108";
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const auth = readAuth();
@@ -8,10 +8,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   headers.set("Content-Type", "application/json");
   if (auth?.token) headers.set("Authorization", `Bearer ${auth.token}`);
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers,
-  });
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
 
   if (response.status === 401 && typeof window !== "undefined") {
     sessionStorage.removeItem("crm_auth");
@@ -49,9 +46,35 @@ export type AuthenticationResult = {
   businesses: AuthenticationBusiness[];
 };
 
+export type BusinessSetupRequest = {
+  name: string;
+  businessType: string;
+  mobile: string;
+  address?: string;
+  city?: string;
+  firstName: string;
+  lastName: string;
+  staffMobile?: string;
+  serviceTemplateId?: string;
+};
+
+export type BusinessSetupResult = {
+  businessId: string;
+  membershipId: string;
+  staffId: string;
+  serviceId: string | null;
+};
+
 export async function login(email: string, password: string) {
   return apiFetch<AuthenticationResult>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function createBusiness(request: BusinessSetupRequest) {
+  return apiFetch<BusinessSetupResult>("/api/businesses", {
+    method: "POST",
+    body: JSON.stringify(request),
   });
 }
