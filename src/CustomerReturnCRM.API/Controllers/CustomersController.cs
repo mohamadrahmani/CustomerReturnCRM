@@ -26,6 +26,18 @@ public sealed class CustomersController : ControllerBase
         catch (UnauthorizedAccessException) { return Forbid(); }
     }
 
+    [HttpGet("{customerId:guid}/profile")]
+    public async Task<ActionResult<CustomerProfileResult>> Profile(Guid businessId, Guid customerId, [FromServices] ICustomerProfileService service, CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        try
+        {
+            var result = await service.GetAsync(businessId, customerId, userId, cancellationToken);
+            return result is null ? NotFound() : Ok(result);
+        }
+        catch (UnauthorizedAccessException) { return Forbid(); }
+    }
+
     [HttpPost]
     public async Task<ActionResult<CustomerResult>> Create(Guid businessId, CreateCustomerRequest request, [FromServices] ICustomerManagementService service, CancellationToken cancellationToken)
     {
