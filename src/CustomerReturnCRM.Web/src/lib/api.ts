@@ -1,13 +1,24 @@
+import { readAuth } from "./auth";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000";
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const auth = readAuth();
+  const headers = new Headers(init.headers);
+  headers.set("Content-Type", "application/json");
+  if (auth?.token) headers.set("Authorization", `Bearer ${auth.token}`);
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init.headers ?? {}),
-    },
+    headers,
   });
+
+  if (response.status === 401 && typeof window !== "undefined") {
+    sessionStorage.removeItem("crm_auth");
+    sessionStorage.removeItem("crm_business_id");
+    window.location.href = "/login";
+    throw new Error("نشست شما منقضی شده است.");
+  }
 
   if (!response.ok) {
     let message = `Request failed (${response.status})`;
