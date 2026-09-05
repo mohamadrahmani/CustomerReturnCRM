@@ -46,12 +46,8 @@ span[aria-hidden="true"].h-9.w-9.rounded-full::before {
   height: 82%;
   background-color: currentColor;
   opacity: .95;
-  -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iIzAwMCIgZD0iTTM5LjUgMzkuOGMtMS4xLTYuMy01LjItMTAuNy0xMC44LTEyLjMgMi45LTIuMSA0LjgtNS40IDQuOC05LjMgMC02LjQtNC45LTExLjYtMTEtMTEuNi01LjcgMC0xMC4zIDQuNi0xMC45IDEwLjUtLjQgMy45LjggNy4zIDMuMSA5LjgtMS45IDEuMS0zLjYgMi43LTUgNC42LTEuOCAyLjQtMyA1LjItMy41IDguMyA0LjEtMS4yIDcuMS0zLjIgOS43LTYuMSAyLjItMi41IDMuNy01LjIgNC44LTguMiAxLjMgMS41IDMuMiAyLjQgNS40IDIuNCAyLjcgMCA1LTEuNCA2LjItMy41LS4yIDMuOC0yLjIgNi45LTUuMyA4LjkgNi4xLjUgMTAuMSAyLjggMTIuNSA2LjV6TTEzLjIgMTUuOGMxLjMtMy43IDQuNC02LjIgOC40LTYuMiA0LjcgMCA4LjQgMy45IDguNCA4LjggMCAuOC0uMSAxLjYtLjMgMi40LS45LTItMi43LTMuNS01LjEtNC4yLTIuNiAxLjgtNi4xIDIuNC0xMC4yIDEuNC0uNy0uMi0xLjEtLjgtMS4yLTIuMnoiLz48L3N2Zz4=");
-  mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iIzAwMCIgZD0iTTM5LjUgMzkuOGMtMS4xLTYuMy01LjItMTAuNy0xMC44LTEyLjMgMi45LTIuMSA0LjgtNS40IDQuOC05LjMgMC02LjQtNC45LTExLjYtMTEtMTEuNi01LjcgMC0xMC4zIDQuNi0xMC45IDEwLjUtLjQgMy45LjggNy4zIDMuMSA5LjgtMS45IDEuMS0zLjYgMi43LTUgNC42LTEuOCAyLjQtMyA1LjItMy41IDguMyA0LjEtMS4yIDcuMS0zLjIgOS43LTYuMSAyLjItMi41IDMuNy01LjIgNC44LTguMiAxLjMgMS41IDMuMiAyLjQgNS40IDIuNCAyLjcgMCA1LTEuNCA2LjItMy41LS4yIDMuOC0yLjIgNi45LTUuMyA4LjkgNi4xLjUgMTAuMSAy٫٨ ١٢٫٥ ٦٫٥zT١٣٫٢ ١٥٫٨c١٫٣-٣٫٧ ٤٫٤-٦٫٢ ٨٫٤-٦٫٢ ٤٫٧ ٠ ٨٫٤ ٣٫٩ ٨٫٤ ٨٫٨ ٠ .٨-.١ ١٫٦-.٣ ٢٫٤-.٩-٢-٢٫٧-٣٫٥-٥٫١-٤٫٢-٢٫٦ ١٫٨-٦٫١ ٢٫٤-١٠٫٢ ١٫٤-.٧-.٢-١٫١-.٨-١٫٢-٢٫٢z");
+  -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iIzAwMCIgZD0iTTM5LjUgMzkuOGMtMS4xLTYuMy01LjItMTAuNy0xMC44LTEyLjMgMi45LTIuMSA0LjgtNS40IDQuOC05LjMgMC02LjQtNC45LTExLjYtMTEtMTEuNi01LjcgMC0xMC4zIDQuNi0xMC45IDEwLjUtLjQgMy45LjggNy4zIDMuMSA5LjgtMS45IDEuMS0zLjYgMi43LTUgNC42LTEuOCAyLjQtMyA1LjItMy41IDguMyA0LjEtMS4yIDcuMS0zLjIgOS43LTYuMSAyLjItMi41IDMuNy01LjIgNC44LTguMiAxLjMgMS41IDMuMiAyLjQgNS40IDIuNCAyLjcgMCA1LTEuNCA2LjItMy41LS4yIDMuOC0yLjIgNi45LTUuMyA4LjkgNi4xLjUgMTAuMSAy٫٨ ١٢٫٥ ٦٫٥zT١٣٫٢ ١٥٫٨c١٫٣-٣٫٧ ٤٫٤-٦٫٢ ٨٫٤-٦٫٢ ٤٫٧ ٠ ٨٫٤ ٣٫٩ ٨٫٤ ٨٫٨ ٠ .٨-.١ ١٫٦-.٣ ٢٫٤-.٩-٢-٢٫٧-٣٫٥-٥٫١-٤٫٢-٢٫٦ ١٫٨-٦٫١ ٢٫٤-١٠٫٢ ١٫٤-.٧-.٢-١٫١-.٨-١٫٢-٢٫٢z");
   -webkit-mask-position: center;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-size: contain;
-  mask-position: center;
-  mask-repeat: no-repeat;
-  mask-size: contain;
 }
