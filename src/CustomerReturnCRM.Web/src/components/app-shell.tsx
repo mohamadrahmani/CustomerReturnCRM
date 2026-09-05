@@ -11,6 +11,7 @@ const navigation = [
   { href: "/customers", label: "مشتریان", icon: "users" },
   { href: "/services", label: "خدمات", icon: "service" },
   { href: "/staff", label: "کارکنان", icon: "staff" },
+  { href: "/visits", label: "مراجعه‌ها", icon: "visit" },
   { href: "/follow-ups", label: "پیگیری‌ها", icon: "check" },
   { href: "/return-analysis", label: "تحلیل بازگشت", icon: "trend" },
 ];
@@ -73,6 +74,7 @@ function Icon({ name, className = "h-5 w-5" }: { name: string; className?: strin
   if (name === "users") return <svg {...common}><circle cx="9" cy="8" r="3"/><path d="M3.5 20c.4-3.2 2.3-5 5.5-5s5.1 1.8 5.5 5"/><path d="M15 5.5a3 3 0 0 1 0 5.8M16 15c2.5.2 4 1.8 4.5 4"/></svg>;
   if (name === "service") return <svg {...common}><path d="m14.7 6.3 3-3 3 3-3 3"/><path d="m13.5 7.5-8 8a2.8 2.8 0 1 0 4 4l8-8"/><path d="m6.5 17.5 2 2"/></svg>;
   if (name === "staff") return <svg {...common}><circle cx="12" cy="7" r="3"/><path d="M5 21c.6-4.1 2.9-6.2 7-6.2s6.4 2.1 7 6.2"/><path d="M4 10h3M17 10h3"/></svg>;
+  if (name === "visit") return <svg {...common}><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 9h16M8 13h3M8 17h5"/></svg>;
   if (name === "check") return <svg {...common}><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg>;
   if (name === "trend") return <svg {...common}><path d="M4 17 10 11l4 4 6-7"/><path d="M15 8h5v5"/></svg>;
   if (name === "logout") return <svg {...common}><path d="M10 17l5-5-5-5M15 12H3"/><path d="M14 4h5v16h-5"/></svg>;
