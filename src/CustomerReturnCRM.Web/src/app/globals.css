@@ -46,7 +46,7 @@ span[aria-hidden="true"].h-9.w-9.rounded-full::before {
   height: 82%;
   background-color: currentColor;
   opacity: .95;
-  -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iIzAwMCIgZD0iTTM5LjUgMzkuOGMtMS4xLTYuMy01LjItMTAuNy0xMC44LTEyLjMgMi45LTIuMSA0LjgtNS40IDQuOC05LjMgMC02LjQtNC45LTExLjYtMTEtMTEuNi01LjcgMC0xMC4zIDQuNi0xMC45IDEwLjUtLjQgMy45LjggNy4zIDMuMSA5LjgtMS45IDEuMS0zLjYgMi43LTUgNC42LTEuOCAyLjQtMyA1LjItMy41IDguMyA0LjEtMS4yIDcuMS0zLjIgOS43LTYuMSAyLjItMi41IDMuNy01LjIgNC44LTguMiAxLjMgMS41IDMuMiAyLjQgNS40IDIuNCAyLjcgMCA1LTEuNCA2LjItMy41LS4yIDMuOC0yLjIgNi45LTUuMyA4LjkgNi4xLjUgMTAuMSAy٫٨ ١٢٫٥ ٦٫٥zT١٣٫٢ ١٥٫٨c١٫٣-٣٫٧ ٤٫٤-٦٫٢ ٨٫٤-٦٫٢ ٤٫٧ ٠ ٨٫٤ ٣٫٩ ٨٫٤ ٨٫٨ ٠ .٨-.١ ١٫٦-.٣ ٢٫٤-.٩-٢-٢٫٧-٣٫٥-٥٫١-٤٫٢-٢٫٦ ١٫٨-٦٫١ ٢٫٤-١٠٫٢ ١٫٤-.٧-.٢-١٫١-.٨-١٫٢-٢٫٢z");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2048%2048%22%3E%3Cpath%20d%3D%22M39.5%2039.8c-1.1-6.3-5.2-10.7-10.8-12.3%202.9-2.1%204.8-5.4%204.8-9.3%200-6.4-4.9-11.6-11-11.6-5.7%200-10.3%204.6-10.9%2010.5-.4%203.9.8%207.3%203.1%209.8-1.9%201.1-3.6%202.7-5%204.6-1.8%202.4-3%205.2-3.5%208.3%204.1-1.2%207.1-3.2%209.7-6.1%202.2-2.5%203.7-5.2%204.8-8.2%201.3%201.5%203.2%202.4%205.4%202.4%202.7%200%205-1.4%206.2-3.5-.2%203.8-2.2%206.9-5.3%208.9%206.1.5%2010.1%202.8%2012.5%206.5zM13.2%2015.8c1.3-3.7%204.4-6.2%208.4-6.2%204.7%200%208.4%203.9%208.4%208.8%200%20.8-.1%201.6-.3%202.4-.9-2-2.7-3.5-5.1-4.2-2.6%201.8-6.1%202.4-10.2%201.4-.7-.2-1.1-.8-1.2-2.2z%22%2F%3E%3C%2Fsvg%3E");
   -webkit-mask-position: center;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-size: contain;
