@@ -41,6 +41,19 @@ public sealed class AppointmentManagementService : IAppointmentManagementService
     public async Task<AppointmentResult?> CancelAsync(Guid businessId,Guid appointmentId,Guid userId,CancellationToken cancellationToken=default)
     { await EnsureMemberAsync(businessId,userId,cancellationToken); var appointment=await _dbContext.Appointments.Include(x=>x.AppointmentServices).SingleOrDefaultAsync(x=>x.BusinessId==businessId&&x.Id==appointmentId,cancellationToken); if(appointment is null)return null; if(appointment.Status==AppointmentStatus.Completed)throw new InvalidOperationException("Completed appointments cannot be cancelled."); appointment.Status=AppointmentStatus.Cancelled; appointment.UpdatedAt=DateTime.UtcNow; await _dbContext.SaveChangesAsync(cancellationToken); return ToResult(appointment); }
 
+    public async Task<AppointmentResult?> MarkNoShowAsync(Guid businessId,Guid appointmentId,Guid userId,CancellationToken cancellationToken=default)
+    {
+        await EnsureMemberAsync(businessId,userId,cancellationToken);
+        var appointment=await _dbContext.Appointments.Include(x=>x.AppointmentServices).SingleOrDefaultAsync(x=>x.BusinessId==businessId&&x.Id==appointmentId,cancellationToken);
+        if(appointment is null)return null;
+        if(appointment.Status==AppointmentStatus.Completed)throw new InvalidOperationException("Completed appointments cannot be marked as no-show.");
+        if(appointment.Status==AppointmentStatus.Cancelled)throw new InvalidOperationException("Cancelled appointments cannot be marked as no-show.");
+        appointment.Status=AppointmentStatus.NoShow;
+        appointment.UpdatedAt=DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return ToResult(appointment);
+    }
+
     private async Task<ReferenceSnapshots> LoadAndValidateReferencesAsync(Guid businessId,Guid customerId,IReadOnlyCollection<AppointmentServiceRequest> requests,CancellationToken cancellationToken)
     {
         if(!await _dbContext.Customers.AnyAsync(x=>x.Id==customerId&&x.BusinessId==businessId&&x.IsActive,cancellationToken))throw new ArgumentException("Customer does not belong to the business or is inactive."); var serviceIds=requests.Select(x=>x.ServiceId).Distinct().ToList(); var staffIds=requests.Select(x=>x.StaffId).Distinct().ToList(); var services=await _dbContext.Services.Where(x=>x.BusinessId==businessId&&x.IsActive&&serviceIds.Contains(x.Id)).ToDictionaryAsync(x=>x.Id,cancellationToken); var staff=await _dbContext.Staff.Where(x=>x.BusinessId==businessId&&x.IsActive&&staffIds.Contains(x.Id)).Select(x=>x.Id).ToListAsync(cancellationToken); if(services.Count!=serviceIds.Count)throw new ArgumentException("One or more services do not belong to the business or are inactive."); if(staff.Count!=staffIds.Count)throw new ArgumentException("One or more staff members do not belong to the business or are inactive."); return new ReferenceSnapshots(services);
