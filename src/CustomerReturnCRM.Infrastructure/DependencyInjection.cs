@@ -10,6 +10,7 @@ using CustomerReturnCRM.Application.Dashboard;
 using CustomerReturnCRM.Application.ServiceTemplateManagement;
 using CustomerReturnCRM.Application.StaffManagement;
 using CustomerReturnCRM.Infrastructure.CustomerManagement;
+using CustomerReturnCRM.Infrastructure.CustomerProfile;
 using CustomerReturnCRM.Infrastructure.AppointmentManagement;
 using CustomerReturnCRM.Infrastructure.BusinessSetup;
 using CustomerReturnCRM.Infrastructure.Authentication;
@@ -37,6 +38,7 @@ public static class DependencyInjection
         services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
         services.AddScoped<IBusinessSetupService, BusinessSetupService>();
         services.AddScoped<ICustomerManagementService, CustomerManagementService>();
+        services.AddScoped<ICustomerProfileService, CustomerProfileService>();
         services.AddScoped<IAppointmentManagementService, AppointmentManagementService>();
         services.AddScoped<IServiceManagementService, ServiceManagementService>();
         services.AddScoped<IVisitManagementService, VisitManagementService>();
@@ -49,18 +51,9 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.Configure<ReturnAnalysisOptions>(options =>
         {
-            options.DueSoonDays = GetNonNegativeSetting(
-                configuration,
-                nameof(ReturnAnalysisOptions.DueSoonDays),
-                options.DueSoonDays);
-            options.AtRiskDays = GetNonNegativeSetting(
-                configuration,
-                nameof(ReturnAnalysisOptions.AtRiskDays),
-                options.AtRiskDays);
-            options.NoRecentVisitDays = GetNonNegativeSetting(
-                configuration,
-                nameof(ReturnAnalysisOptions.NoRecentVisitDays),
-                options.NoRecentVisitDays);
+            options.DueSoonDays = GetNonNegativeSetting(configuration, nameof(ReturnAnalysisOptions.DueSoonDays), options.DueSoonDays);
+            options.AtRiskDays = GetNonNegativeSetting(configuration, nameof(ReturnAnalysisOptions.AtRiskDays), options.AtRiskDays);
+            options.NoRecentVisitDays = GetNonNegativeSetting(configuration, nameof(ReturnAnalysisOptions.NoRecentVisitDays), options.NoRecentVisitDays);
         });
 
         services.AddIdentityCore<ApplicationUser>(options =>
@@ -69,35 +62,17 @@ public static class DependencyInjection
                 options.Password.RequiredLength = 8;
             })
             .AddRoles<IdentityRole<Guid>>()
-            .AddEntityFrameworkStores<ApplicationDbContext>()
-            ;
+            .AddEntityFrameworkStores<ApplicationDbContext>();
         return services;
     }
 
-    private static int GetNonNegativeSetting(
-        IConfiguration configuration,
-        string settingName,
-        int defaultValue)
+    private static int GetNonNegativeSetting(IConfiguration configuration, string settingName, int defaultValue)
     {
         var key = $"{ReturnAnalysisOptions.SectionName}:{settingName}";
         var configuredValue = configuration[key];
-        if (string.IsNullOrWhiteSpace(configuredValue))
-        {
-            return defaultValue;
-        }
-
+        if (string.IsNullOrWhiteSpace(configuredValue)) return defaultValue;
         if (!int.TryParse(configuredValue, out var parsedValue) || parsedValue < 0)
-        {
-            throw new InvalidOperationException(
-                $"Configuration value '{key}' must be a non-negative integer.");
-        }
-
+            throw new InvalidOperationException($"Configuration value '{key}' must be a non-negative integer.");
         return parsedValue;
     }
 }
-
-
-
-
-
-
