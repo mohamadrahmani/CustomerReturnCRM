@@ -30,7 +30,6 @@ public sealed class UpdateAppointmentRequest
 }
 
 public sealed record AppointmentServiceResult(Guid Id, Guid ServiceId, Guid StaffId, string ServiceTitle, decimal Price, int DurationMinutes);
-
 public sealed record AppointmentResult(Guid Id, Guid BusinessId, Guid CustomerId, DateTime StartAt, DateTime EndAt, AppointmentStatus Status, string? Note, DateTime CreatedAt, DateTime? UpdatedAt, IReadOnlyList<AppointmentServiceResult> Services);
 
 public interface IAppointmentManagementService
@@ -39,5 +38,6 @@ public interface IAppointmentManagementService
     Task<PagedResult<AppointmentResult>> ListAsync(Guid businessId, Guid userId, DateTime? from, DateTime? to, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default);
     Task<AppointmentResult?> GetAsync(Guid businessId, Guid appointmentId, Guid userId, CancellationToken cancellationToken = default);
     Task<AppointmentResult?> UpdateAsync(Guid businessId, Guid appointmentId, Guid userId, UpdateAppointmentRequest request, CancellationToken cancellationToken = default);
+    Task<AppointmentResult?> ConfirmAsync(Guid businessId, Guid appointmentId, Guid userId, CancellationToken cancellationToken = default);
     Task<AppointmentResult?> CancelAsync(Guid businessId, Guid appointmentId, Guid userId, CancellationToken cancellationToken = default);
 }
