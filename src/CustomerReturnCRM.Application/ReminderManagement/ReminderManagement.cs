@@ -12,6 +12,11 @@ public sealed class CreateReminderRequest
     public string? Note { get; init; }
 }
 
+public sealed class CompleteReminderRequest
+{
+    public string? Note { get; init; }
+}
+
 public sealed record ReminderResult(
     Guid Id,
     Guid BusinessId,
@@ -54,6 +59,7 @@ public interface IReminderManagementService
         Guid businessId,
         Guid reminderId,
         Guid userId,
+        CompleteReminderRequest request,
         CancellationToken cancellationToken = default);
 
     Task<ReminderResult?> CancelAsync(
