@@ -4,7 +4,8 @@ import { FormEvent, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cancelReminder, completeReminder, createReminder, getCustomers, getReminders, getServices } from "../../lib/api";
 import { useAuth } from "../../components/auth-provider";
-import { PersianDateTimePicker } from "../../components/persian-date-picker";
+import { PersianDateTimePicker, PersianDatePicker } from "../../components/persian-date-picker";
+import { CustomerPicker } from "../../components/customer-picker";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -21,6 +22,8 @@ export default function FollowUpsPage() {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<number | null>(0);
   const [page, setPage] = useState(1);
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
   const [customerId, setCustomerId] = useState("");
   const [serviceId, setServiceId] = useState("");
@@ -29,8 +32,8 @@ export default function FollowUpsPage() {
   const [note, setNote] = useState("");
 
   const reminders = useQuery({
-    queryKey: ["reminders", activeBusinessId, status, page],
-    queryFn: () => getReminders(activeBusinessId!, status, page, 20),
+    queryKey: ["reminders", activeBusinessId, status, page, from, to],
+    queryFn: () => getReminders(activeBusinessId!, status, page, 20, from, to),
     enabled: !!activeBusinessId,
   });
   const customers = useQuery({
@@ -70,10 +73,18 @@ export default function FollowUpsPage() {
         <button onClick={() => setOpenCreate(true)} className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white">+ پیگیری جدید</button>
       </header>
 
-      <div className="flex gap-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2">
-        {[[null, "همه"], [0, "باز"], [1, "انجام‌شده"], [2, "لغوشده"]].map(([value, label]) => (
-          <button key={String(value)} onClick={() => { setStatus(value as number | null); setPage(1); }} className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium ${status === value ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}>{label}</button>
-        ))}
+      <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3">
+        <div className="flex gap-2 overflow-x-auto">
+          {[[null, "همه"], [0, "باز"], [1, "انجام‌شده"], [2, "لغوشده"]].map(([value, label]) => (
+            <button key={String(value)} onClick={() => { setStatus(value as number | null); setPage(1); }} className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium ${status === value ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}>{label}</button>
+          ))}
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto]">
+          <label><span className="mb-1 block text-[11px] font-bold text-slate-600">از تاریخ</span><PersianDatePicker value={from} onChange={value => { setFrom(value); setPage(1); }} /></label>
+          <label><span className="mb-1 block text-[11px] font-bold text-slate-600">تا تاریخ</span><PersianDatePicker value={to} onChange={value => { setTo(value); setPage(1); }} /></label>
+          <button type="button" onClick={() => { const d = new Date(); const value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; setFrom(value); setTo(value); setPage(1); }} className="crm-secondary-action self-end">امروز</button>
+          <button type="button" onClick={() => { setFrom(""); setTo(""); setPage(1); }} className="crm-secondary-action self-end">همه تاریخ‌ها</button>
+        </div>
       </div>
 
       {reminders.isLoading && <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">در حال دریافت پیگیری‌ها...</div>}
@@ -90,7 +101,7 @@ export default function FollowUpsPage() {
         </section>
       )}
 
-      {openCreate && <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 sm:items-center sm:p-4"><form onSubmit={submit} className="w-full max-w-lg space-y-4 rounded-t-3xl bg-white p-5 shadow-xl sm:rounded-3xl"><div className="flex items-center justify-between"><h2 className="text-lg font-bold">پیگیری جدید</h2><button type="button" onClick={() => setOpenCreate(false)} className="text-slate-400">✕</button></div><label className="block text-sm"><span className="mb-1 block font-medium">مشتری</span><select value={customerId} onChange={e => setCustomerId(e.target.value)} className="w-full rounded-xl border px-3 py-2.5" required><option value="">انتخاب مشتری</option>{customers.data?.items.map(x => <option key={x.id} value={x.id}>{x.firstName} {x.lastName ?? ""} — {x.mobile}</option>)}</select></label><label className="block text-sm"><span className="mb-1 block font-medium">خدمت مرتبط</span><select value={serviceId} onChange={e => setServiceId(e.target.value)} className="w-full rounded-xl border px-3 py-2.5"><option value="">بدون خدمت مشخص</option>{services.data?.items.map(x => <option key={x.id} value={x.id}>{x.title}</option>)}</select></label><label className="block text-sm"><span className="mb-1 block font-medium">عنوان پیگیری</span><input value={title} onChange={e => setTitle(e.target.value)} className="w-full rounded-xl border px-3 py-2.5" placeholder="مثلاً تماس برای یادآوری مراجعه" required /></label><label className="block text-sm"><span className="mb-1 block font-medium">موعد پیگیری</span><PersianDateTimePicker value={dueAt} onChange={setDueAt} /></label><label className="block text-sm"><span className="mb-1 block font-medium">یادداشت</span><textarea value={note} onChange={e => setNote(e.target.value)} rows={3} className="w-full rounded-xl border px-3 py-2.5" /></label>{create.isError && <p className="text-sm text-red-600">ثبت پیگیری انجام نشد.</p>}<div className="flex gap-2 pt-2"><button type="button" onClick={() => setOpenCreate(false)} className="flex-1 rounded-xl border px-4 py-3 font-semibold">انصراف</button><button disabled={create.isPending} className="flex-1 rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white disabled:opacity-50">{create.isPending ? "در حال ثبت..." : "ثبت پیگیری"}</button></div></form></div>}
+      {openCreate && <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 sm:items-center sm:p-4"><form onSubmit={submit} className="w-full max-w-lg space-y-4 rounded-t-3xl bg-white p-5 shadow-xl sm:rounded-3xl"><div className="flex items-center justify-between"><h2 className="text-lg font-bold">پیگیری جدید</h2><button type="button" onClick={() => setOpenCreate(false)} className="text-slate-400">✕</button></div><label className="block text-sm"><span className="mb-1 block font-medium">مشتری</span><CustomerPicker items={customers.data?.items ?? []} value={customerId} onChange={setCustomerId} required /></label><label className="block text-sm"><span className="mb-1 block font-medium">خدمت مرتبط</span><select value={serviceId} onChange={e => setServiceId(e.target.value)} className="w-full rounded-xl border px-3 py-2.5"><option value="">بدون خدمت مشخص</option>{services.data?.items.map(x => <option key={x.id} value={x.id}>{x.title}</option>)}</select></label><label className="block text-sm"><span className="mb-1 block font-medium">عنوان پیگیری</span><input value={title} onChange={e => setTitle(e.target.value)} className="w-full rounded-xl border px-3 py-2.5" placeholder="مثلاً تماس برای یادآوری مراجعه" required /></label><label className="block text-sm"><span className="mb-1 block font-medium">موعد پیگیری</span><PersianDateTimePicker value={dueAt} onChange={setDueAt} /></label><label className="block text-sm"><span className="mb-1 block font-medium">یادداشت</span><textarea value={note} onChange={e => setNote(e.target.value)} rows={3} className="w-full rounded-xl border px-3 py-2.5" /></label>{create.isError && <p className="text-sm text-red-600">ثبت پیگیری انجام نشد.</p>}<div className="flex gap-2 pt-2"><button type="button" onClick={() => setOpenCreate(false)} className="flex-1 rounded-xl border px-4 py-3 font-semibold">انصراف</button><button disabled={create.isPending} className="flex-1 rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white disabled:opacity-50">{create.isPending ? "در حال ثبت..." : "ثبت پیگیری"}</button></div></form></div>}
     </main>
   );
 }
