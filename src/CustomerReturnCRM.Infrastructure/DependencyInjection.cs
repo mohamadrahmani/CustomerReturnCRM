@@ -9,6 +9,7 @@ using CustomerReturnCRM.Application.ReminderManagement;
 using CustomerReturnCRM.Application.Dashboard;
 using CustomerReturnCRM.Application.ServiceTemplateManagement;
 using CustomerReturnCRM.Application.StaffManagement;
+using CustomerReturnCRM.Application.Sms;
 using CustomerReturnCRM.Infrastructure.CustomerManagement;
 using CustomerReturnCRM.Infrastructure.CustomerProfile;
 using CustomerReturnCRM.Infrastructure.AppointmentManagement;
@@ -23,6 +24,7 @@ using CustomerReturnCRM.Infrastructure.ServiceTemplateManagement;
 using CustomerReturnCRM.Infrastructure.StaffManagement;
 using CustomerReturnCRM.Infrastructure.ServiceManagement;
 using CustomerReturnCRM.Infrastructure.VisitManagement;
+using CustomerReturnCRM.Infrastructure.Sms;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -48,6 +50,7 @@ public static class DependencyInjection
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IServiceTemplateManagementService, ServiceTemplateManagementService>();
         services.AddScoped<IStaffManagementService, StaffManagementService>();
+        services.AddScoped<ISmsManagementService, SmsManagementService>();
         services.AddSingleton(TimeProvider.System);
         services.Configure<ReturnAnalysisOptions>(options =>
         {
