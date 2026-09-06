@@ -9,7 +9,6 @@ namespace CustomerReturnCRM.Infrastructure.StaffManagement;
 public sealed class StaffManagementService : IStaffManagementService
 {
     private readonly ApplicationDbContext _dbContext;
-
     public StaffManagementService(ApplicationDbContext dbContext) => _dbContext = dbContext;
 
     public async Task<PagedResult<StaffResult>> ListAsync(Guid businessId, Guid userId, int page = 1, int pageSize = 20, string? search = null, bool? isActive = true, CancellationToken cancellationToken = default)
@@ -19,8 +18,7 @@ public sealed class StaffManagementService : IStaffManagementService
         var query = _dbContext.Staff.AsNoTracking().Where(x => x.BusinessId == businessId);
         if (isActive.HasValue) query = query.Where(x => x.IsActive == isActive.Value);
         var normalizedSearch = search?.Trim();
-        if (!string.IsNullOrWhiteSpace(normalizedSearch))
-            query = query.Where(x => x.FirstName.Contains(normalizedSearch) || x.LastName.Contains(normalizedSearch) || (x.Mobile != null && x.Mobile.Contains(normalizedSearch)));
+        if (!string.IsNullOrWhiteSpace(normalizedSearch)) query = query.Where(x => x.FirstName.Contains(normalizedSearch) || x.LastName.Contains(normalizedSearch) || (x.Mobile != null && x.Mobile.Contains(normalizedSearch)));
         var total = await query.CountAsync(cancellationToken);
         var items = await query.OrderBy(x => x.FirstName).ThenBy(x => x.LastName).ThenBy(x => x.Id).Skip((page - 1) * pageSize).Take(pageSize).Select(x => ToResult(x)).ToListAsync(cancellationToken);
         return Pagination.Create(items, page, pageSize, total);
@@ -36,7 +34,9 @@ public sealed class StaffManagementService : IStaffManagementService
     {
         await EnsureMemberAsync(businessId, userId, cancellationToken);
         Validate(request.FirstName, request.LastName);
-        var staff = new Staff { Id = Guid.NewGuid(), BusinessId = businessId, FirstName = request.FirstName.Trim(), LastName = request.LastName.Trim(), Mobile = Normalize(request.Mobile), IsActive = true, CreatedAt = DateTime.UtcNow };
+        var mobile = Normalize(request.Mobile);
+        await EnsureMobileIsUniqueAsync(businessId, mobile, null, cancellationToken);
+        var staff = new Staff { Id = Guid.NewGuid(), BusinessId = businessId, FirstName = request.FirstName.Trim(), LastName = request.LastName.Trim(), Mobile = mobile, IsActive = true, CreatedAt = DateTime.UtcNow };
         _dbContext.Staff.Add(staff);
         await _dbContext.SaveChangesAsync(cancellationToken);
         return ToResult(staff);
@@ -48,7 +48,9 @@ public sealed class StaffManagementService : IStaffManagementService
         Validate(request.FirstName, request.LastName);
         var staff = await _dbContext.Staff.SingleOrDefaultAsync(x => x.BusinessId == businessId && x.Id == staffId, cancellationToken);
         if (staff is null) return null;
-        staff.FirstName = request.FirstName.Trim(); staff.LastName = request.LastName.Trim(); staff.Mobile = Normalize(request.Mobile); staff.IsActive = request.IsActive; staff.UpdatedAt = DateTime.UtcNow;
+        var mobile = Normalize(request.Mobile);
+        await EnsureMobileIsUniqueAsync(businessId, mobile, staffId, cancellationToken);
+        staff.FirstName = request.FirstName.Trim(); staff.LastName = request.LastName.Trim(); staff.Mobile = mobile; staff.IsActive = request.IsActive; staff.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync(cancellationToken);
         return ToResult(staff);
     }
@@ -61,6 +63,13 @@ public sealed class StaffManagementService : IStaffManagementService
         staff.IsActive = false; staff.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync(cancellationToken);
         return true;
+    }
+
+    private async Task EnsureMobileIsUniqueAsync(Guid businessId, string? mobile, Guid? exceptStaffId, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(mobile)) return;
+        var exists = await _dbContext.Staff.AnyAsync(x => x.BusinessId == businessId && x.Mobile == mobile && (!exceptStaffId.HasValue || x.Id != exceptStaffId.Value), cancellationToken);
+        if (exists) throw new ArgumentException("این شماره موبایل قبلاً برای یک کارمند در این کسب‌وکار ثبت شده است.");
     }
 
     private async Task EnsureMemberAsync(Guid businessId, Guid userId, CancellationToken cancellationToken)
