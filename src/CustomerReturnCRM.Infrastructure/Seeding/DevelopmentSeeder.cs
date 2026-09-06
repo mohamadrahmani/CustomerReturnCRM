@@ -1,5 +1,6 @@
 using CustomerReturnCRM.Domain.Entities;
 using CustomerReturnCRM.Infrastructure.Identity;
+using CustomerReturnCRM.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
