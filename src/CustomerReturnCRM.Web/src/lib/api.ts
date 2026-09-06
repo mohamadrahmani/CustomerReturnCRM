@@ -1,25 +1,6 @@
 import { readAuth } from "./auth";
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5108";
-
-export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const auth = readAuth();
-  const headers = new Headers(init.headers);
-  headers.set("Content-Type", "application/json");
-  if (auth?.token) headers.set("Authorization", `Bearer ${auth.token}`);
-  const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
-  if (response.status === 401 && typeof window !== "undefined") {
-    sessionStorage.removeItem("crm_auth"); sessionStorage.removeItem("crm_business_id"); window.location.href = "/login"; throw new Error("نشست شما منقضی شده است.");
-  }
-  if (!response.ok) {
-    let message = `Request failed (${response.status})`;
-    try { const body = await response.json(); message = body.error ?? message; } catch { /* status message */ }
-    throw new Error(message);
-  }
-  if (response.status === 204) return undefined as T;
-  return response.json() as Promise<T>;
-}
-
+export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> { const auth = readAuth(); const headers = new Headers(init.headers); headers.set("Content-Type", "application/json"); if (auth?.token) headers.set("Authorization", `Bearer ${auth.token}`); const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers }); if (response.status === 401 && typeof window !== "undefined") { sessionStorage.removeItem("crm_auth"); sessionStorage.removeItem("crm_business_id"); window.location.href = "/login"; throw new Error("نشست شما منقضی شده است."); } if (!response.ok) { let message = `Request failed (${response.status})`; try { const body = await response.json(); message = body.error ?? message; } catch { /* status message */ } throw new Error(message); } if (response.status === 204) return undefined as T; return response.json() as Promise<T>; }
 export type AuthenticationBusiness = { id: string; name: string; role: string };
 export type AuthenticationResult = { userId: string; email: string; token: string; expiresAt: string; businesses: AuthenticationBusiness[] };
 export type BusinessSetupRequest = { name: string; businessType: string; mobile: string; address?: string; city?: string; firstName: string; lastName: string; staffMobile?: string; serviceTemplateId?: string };
@@ -40,7 +21,6 @@ export type Reminder = { id: string; businessId: string; customerId: string; ser
 export type ExpectedReturn = { serviceId: string; serviceTitle: string; lastVisitAt: string; suggestedReturnDays: number; expectedReturnDate: string; daysFromExpectedReturn: number; hasFutureAppointment: boolean };
 export type CustomerReturnAnalysis = { customerId: string; customerName: string; mobile: string; services: ExpectedReturn[] };
 export type CustomerProfile = { customer: Customer; visits: CustomerProfileVisit[]; futureAppointments: CustomerProfileAppointment[]; reminders: CustomerProfileReminder[]; returnAnalysis: CustomerReturnAnalysis };
-
 export async function login(email: string, password: string) { return apiFetch<AuthenticationResult>("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function register(email: string, password: string) { return apiFetch<AuthenticationResult>("/api/auth/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function createBusiness(request: BusinessSetupRequest) { return apiFetch<BusinessSetupResult>("/api/businesses", { method: "POST", body: JSON.stringify(request) }); }
@@ -59,3 +39,5 @@ export async function updateService(businessId: string, serviceId: string, reque
 export async function getStaff(businessId: string, page = 1, pageSize = 20, search = "", isActive: boolean | null = true) { const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) }); if (search.trim()) params.set("search", search.trim()); if (isActive !== null) params.set("isActive", String(isActive)); return apiFetch<PagedResult<Staff>>(`/api/businesses/${businessId}/staff?${params.toString()}`); }
 export async function createStaff(businessId: string, request: { firstName: string; lastName: string; mobile?: string }) { return apiFetch<Staff>(`/api/businesses/${businessId}/staff`, { method: "POST", body: JSON.stringify(request) }); }
 export async function updateStaff(businessId: string, staffId: string, request: { firstName: string; lastName: string; mobile?: string; isActive: boolean }) { return apiFetch<Staff>(`/api/businesses/${businessId}/staff/${staffId}`, { method: "PUT", body: JSON.stringify(request) }); }
+export async function getDismissedSmartLists(businessId: string, page = 1, pageSize = 15) { return apiFetch<PagedResult<DashboardSmartListItem>>(`/api/businesses/${businessId}/smart-lists/dismissed?page=${page}&pageSize=${pageSize}`); }
+export async function restoreSmartListItem(businessId: string, item: { smartListType: string; customerId: string; serviceId: string | null }) { return apiFetch<void>(`/api/businesses/${businessId}/smart-lists/restore`, { method: "POST", body: JSON.stringify(item) }); }
