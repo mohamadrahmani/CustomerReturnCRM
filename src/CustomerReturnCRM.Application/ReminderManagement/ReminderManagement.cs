@@ -21,7 +21,10 @@ public sealed record ReminderResult(
     Guid Id,
     Guid BusinessId,
     Guid CustomerId,
+    string CustomerName,
+    string? CustomerMobile,
     Guid? ServiceId,
+    string? ServiceTitle,
     string Title,
     DateTime DueAt,
     ReminderStatus Status,
@@ -33,38 +36,9 @@ public sealed record ReminderResult(
 
 public interface IReminderManagementService
 {
-    Task<PagedResult<ReminderResult>> ListAsync(
-        Guid businessId,
-        Guid userId,
-        ReminderStatus? status,
-        DateTime? from,
-        DateTime? to,
-        int page = 1,
-        int pageSize = 20,
-        CancellationToken cancellationToken = default);
-
-    Task<ReminderResult?> GetAsync(
-        Guid businessId,
-        Guid reminderId,
-        Guid userId,
-        CancellationToken cancellationToken = default);
-
-    Task<ReminderResult> CreateAsync(
-        Guid businessId,
-        Guid userId,
-        CreateReminderRequest request,
-        CancellationToken cancellationToken = default);
-
-    Task<ReminderResult?> CompleteAsync(
-        Guid businessId,
-        Guid reminderId,
-        Guid userId,
-        CompleteReminderRequest request,
-        CancellationToken cancellationToken = default);
-
-    Task<ReminderResult?> CancelAsync(
-        Guid businessId,
-        Guid reminderId,
-        Guid userId,
-        CancellationToken cancellationToken = default);
+    Task<PagedResult<ReminderResult>> ListAsync(Guid businessId, Guid userId, ReminderStatus? status, DateTime? from, DateTime? to, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default);
+    Task<ReminderResult?> GetAsync(Guid businessId, Guid reminderId, Guid userId, CancellationToken cancellationToken = default);
+    Task<ReminderResult> CreateAsync(Guid businessId, Guid userId, CreateReminderRequest request, CancellationToken cancellationToken = default);
+    Task<ReminderResult?> CompleteAsync(Guid businessId, Guid reminderId, Guid userId, CompleteReminderRequest request, CancellationToken cancellationToken = default);
+    Task<ReminderResult?> CancelAsync(Guid businessId, Guid reminderId, Guid userId, CancellationToken cancellationToken = default);
 }
