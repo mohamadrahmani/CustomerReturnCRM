@@ -126,8 +126,54 @@ public sealed class SmsManagementService : ISmsManagementService
         if (status.HasValue) query = query.Where(x => x.Status == status.Value);
         (page, pageSize) = Pagination.Normalize(page, pageSize);
         var total = await query.CountAsync(cancellationToken);
-        var campaigns = await query.OrderByDescending(x => x.CreatedAt).Skip((page - 1) * pageSize).Take(pageSize).Include(x => x.Recipients).ThenInclude(x => x.Customer).ToListAsync(cancellationToken);
-        return Pagination.Create(campaigns.Select(x => Map(x, false)).ToList(), page, pageSize, total);
+
+        var campaigns = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => new
+            {
+                x.Id,
+                x.BusinessId,
+                x.TemplateId,
+                x.CreatedByUserId,
+                x.Name,
+                x.Message,
+                x.ScheduledAt,
+                x.Status,
+                x.StartedAt,
+                x.CompletedAt,
+                x.CancelledAt,
+                x.CreatedAt,
+                x.UpdatedAt,
+                RecipientCount = x.Recipients.Count(),
+                AcceptedCount = x.Recipients.Count(r => r.Status == SmsRecipientStatus.Submitted || r.Status == SmsRecipientStatus.Delivered),
+                DeliveredCount = x.Recipients.Count(r => r.Status == SmsRecipientStatus.Delivered),
+                FailedCount = x.Recipients.Count(r => r.Status == SmsRecipientStatus.Failed)
+            })
+            .ToListAsync(cancellationToken);
+
+        var results = campaigns.Select(x => new SmsCampaignResult(
+            x.Id,
+            x.BusinessId,
+            x.TemplateId,
+            x.CreatedByUserId,
+            x.Name,
+            x.Message,
+            x.ScheduledAt,
+            x.Status,
+            x.StartedAt,
+            x.CompletedAt,
+            x.CancelledAt,
+            x.CreatedAt,
+            x.UpdatedAt,
+            x.RecipientCount,
+            x.AcceptedCount,
+            x.DeliveredCount,
+            x.FailedCount,
+            null)).ToList();
+
+        return Pagination.Create(results, page, pageSize, total);
     }
 
     public async Task<SmsCampaignResult?> CancelCampaignAsync(Guid businessId, Guid campaignId, Guid userId, CancellationToken cancellationToken = default)
