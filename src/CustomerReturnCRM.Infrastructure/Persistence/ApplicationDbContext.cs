@@ -21,6 +21,9 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
     public DbSet<VisitService> VisitServices => Set<VisitService>();
     public DbSet<SmartListDismissal> SmartListDismissals => Set<SmartListDismissal>();
     public DbSet<Reminder> Reminders => Set<Reminder>();
+    public DbSet<SmsTemplate> SmsTemplates => Set<SmsTemplate>();
+    public DbSet<SmsCampaign> SmsCampaigns => Set<SmsCampaign>();
+    public DbSet<SmsRecipient> SmsRecipients => Set<SmsRecipient>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -191,7 +194,47 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
             entity.HasOne(x => x.Service).WithMany().HasForeignKey(x => x.ServiceId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<CustomerReturnCRM.Infrastructure.Identity.ApplicationUser>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
         });
+
+        builder.Entity<SmsTemplate>(entity =>
+        {
+            entity.ToTable("SmsTemplates");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            entity.Property(x => x.Content).HasMaxLength(2000).IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.HasIndex(x => new { x.BusinessId, x.Name }).IsUnique();
+            entity.HasIndex(x => new { x.BusinessId, x.IsActive });
+            entity.HasOne(x => x.Business).WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<SmsCampaign>(entity =>
+        {
+            entity.ToTable("SmsCampaigns");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(200);
+            entity.Property(x => x.Message).HasMaxLength(2000).IsRequired();
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(30).IsRequired();
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.HasIndex(x => new { x.BusinessId, x.Status, x.ScheduledAt });
+            entity.HasIndex(x => new { x.BusinessId, x.CreatedByUserId });
+            entity.HasOne(x => x.Business).WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Template).WithMany().HasForeignKey(x => x.TemplateId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<SmsRecipient>(entity =>
+        {
+            entity.ToTable("SmsRecipients");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Mobile).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
+            entity.Property(x => x.ProviderMessageId).HasMaxLength(200);
+            entity.Property(x => x.FailureReason).HasMaxLength(1000);
+            entity.Property(x => x.CreatedAt).IsRequired();
+            entity.HasIndex(x => new { x.SmsCampaignId, x.CustomerId }).IsUnique();
+            entity.HasIndex(x => new { x.SmsCampaignId, x.Status });
+            entity.HasIndex(x => x.ProviderMessageId);
+            entity.HasOne(x => x.SmsCampaign).WithMany(x => x.Recipients).HasForeignKey(x => x.SmsCampaignId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+        });
     }
 }
-
-
