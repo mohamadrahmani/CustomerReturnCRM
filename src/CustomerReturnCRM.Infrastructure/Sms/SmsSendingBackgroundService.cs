@@ -12,25 +12,34 @@ public sealed class SmsSendingBackgroundService : BackgroundService
 {
     private const int CampaignBatchSize = 10;
     private const int RecipientBatchSize = 100;
-    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(10);
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<SmsSendingBackgroundService> _logger;
+    private readonly TimeSpan _pollInterval;
 
     public SmsSendingBackgroundService(
         IServiceScopeFactory scopeFactory,
         TimeProvider timeProvider,
-        ILogger<SmsSendingBackgroundService> logger)
+        ILogger<SmsSendingBackgroundService> logger,
+        IConfiguration configuration)
     {
         _scopeFactory = scopeFactory;
         _timeProvider = timeProvider;
         _logger = logger;
+
+        var pollingIntervalSeconds = configuration.GetValue<int?>("Sms:PollingIntervalSeconds") ?? 10;
+        if (pollingIntervalSeconds <= 0)
+            throw new InvalidOperationException("Sms:PollingIntervalSeconds must be greater than zero.");
+
+        _pollInterval = TimeSpan.FromSeconds(pollingIntervalSeconds);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("SMS sending background service started.");
+        _logger.LogInformation(
+            "SMS sending background service started. Polling interval: {PollingIntervalSeconds} seconds.",
+            _pollInterval.TotalSeconds);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -49,7 +58,7 @@ public sealed class SmsSendingBackgroundService : BackgroundService
 
             try
             {
-                await Task.Delay(PollInterval, stoppingToken);
+                await Task.Delay(_pollInterval, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
