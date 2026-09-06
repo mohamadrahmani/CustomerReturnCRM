@@ -226,6 +226,7 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
             entity.ToTable("SmsRecipients");
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Mobile).HasMaxLength(30).IsRequired();
+            entity.Property(x => x.RenderedMessage).HasMaxLength(2000);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
             entity.Property(x => x.ProviderMessageId).HasMaxLength(200);
             entity.Property(x => x.FailureReason).HasMaxLength(1000);
