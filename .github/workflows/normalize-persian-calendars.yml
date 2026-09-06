@@ -1,0 +1,64 @@
+name: Normalize Persian Calendars
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch calendar inputs
+        shell: python
+        run: |
+          from pathlib import Path
+
+          visits = Path('src/CustomerReturnCRM.Web/src/app/visits/page.tsx')
+          text = visits.read_text(encoding='utf-8')
+          text = text.replace(
+              'import { useAuth } from "@/components/auth-provider";\n',
+              'import { useAuth } from "@/components/auth-provider";\nimport { PersianDatePicker, PersianDateTimePicker } from "@/components/persian-date-picker";\n',
+              1,
+          )
+          text = text.replace(
+              '<input type="date" value={from} onChange={e => { setFrom(e.target.value); setPage(1); }} className="crm-input w-full" />',
+              '<PersianDatePicker value={from} onChange={value => { setFrom(value); setPage(1); }} />',
+              1,
+          )
+          text = text.replace(
+              '<input type="date" value={to} onChange={e => { setTo(e.target.value); setPage(1); }} className="crm-input w-full" />',
+              '<PersianDatePicker value={to} onChange={value => { setTo(value); setPage(1); }} />',
+              1,
+          )
+          visits.write_text(text, encoding='utf-8')
+
+          followups = Path('src/CustomerReturnCRM.Web/src/app/follow-ups/page.tsx')
+          text = followups.read_text(encoding='utf-8')
+          text = text.replace(
+              'import { useAuth } from "../../components/auth-provider";\n',
+              'import { useAuth } from "../../components/auth-provider";\nimport { PersianDateTimePicker } from "../../components/persian-date-picker";\n',
+              1,
+          )
+          text = text.replace(
+              '<input type="datetime-local" value={dueAt} onChange={e => setDueAt(e.target.value)} className="w-full rounded-xl border px-3 py-2.5" required />',
+              '<PersianDateTimePicker value={dueAt} onChange={setDueAt} />',
+              1,
+          )
+          followups.write_text(text, encoding='utf-8')
+
+          workflow = Path('.github/workflows/normalize-persian-calendars.yml')
+          workflow.unlink()
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/CustomerReturnCRM.Web/src/app/visits/page.tsx src/CustomerReturnCRM.Web/src/app/follow-ups/page.tsx .github/workflows/normalize-persian-calendars.yml
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "fix: use Persian calendars across date inputs"
+          git push
