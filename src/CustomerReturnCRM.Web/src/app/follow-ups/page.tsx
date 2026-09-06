@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { cancelReminder, completeReminder, createReminder, getCustomers, getReminders, getServices } from "../../lib/api";
-import { useBusiness } from "../../lib/business";
+import { useAuth } from "../../components/auth-provider";
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("fa-IR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -16,7 +16,7 @@ function statusLabel(status: number) {
 }
 
 export default function FollowUpsPage() {
-  const { activeBusinessId } = useBusiness();
+  const { businessId: activeBusinessId } = useAuth();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<number | null>(0);
   const [page, setPage] = useState(1);
