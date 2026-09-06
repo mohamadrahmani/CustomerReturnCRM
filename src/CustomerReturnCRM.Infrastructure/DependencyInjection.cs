@@ -51,6 +51,8 @@ public static class DependencyInjection
         services.AddScoped<IServiceTemplateManagementService, ServiceTemplateManagementService>();
         services.AddScoped<IStaffManagementService, StaffManagementService>();
         services.AddScoped<ISmsManagementService, SmsManagementService>();
+        services.AddSingleton<ISmsProvider, LoggingSmsProvider>();
+        services.AddHostedService<SmsSendingBackgroundService>();
         services.AddSingleton(TimeProvider.System);
         services.Configure<ReturnAnalysisOptions>(options =>
         {
