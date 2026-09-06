@@ -4,7 +4,7 @@
 
 This document describes the SMS backend API currently implemented for the CustomerReturnCRM frontend.
 
-The API is business-scoped and requires authentication. The frontend should treat SMS as an action/capability available from Customers, Smart Lists, Appointments, and Settings rather than as an isolated business domain in the navigation.
+SMS is an **action/capability**, not an independent navigation domain. It is exposed contextually from Customers, Smart Lists, Appointments, and Settings/Template management. The frontend should reuse one shared **SMS Composer**.
 
 ## Base URL
 
@@ -20,15 +20,11 @@ API base path:
 /api/businesses/{businessId}/sms
 ```
 
-All endpoints require a valid authenticated user (`[Authorize]`). The backend identifies the current user from the JWT `NameIdentifier` claim or `sub` claim.
-
----
+All endpoints require authentication. The authenticated user must be a member of the requested business.
 
 ## Common conventions
 
 ### Authentication
-
-Send the JWT as:
 
 ```http
 Authorization: Bearer <token>
@@ -36,19 +32,15 @@ Authorization: Bearer <token>
 
 ### Business scope
 
-`businessId` is a required route parameter on every endpoint. The authenticated user must be a member of that business.
-
-If the user is not authenticated: `401 Unauthorized`.
-
-If the user is authenticated but is not a member of the business: `403 Forbidden`.
+`businessId` is required on every endpoint. Non-authenticated requests return `401`. Authenticated users who are not members of the business receive `403`.
 
 ### Date/time
 
-`DateTime` values should be sent/handled as UTC. `ScheduledAt` must be in the future when supplied.
+API `DateTime` values are UTC/ISO 8601. The frontend must display and select dates/times using the project's Persian date/time components and send ISO 8601 values to the API. `scheduledAt` must be in the future when supplied.
 
 ### SMS variables
 
-Campaign message rendering currently supports these exact variables:
+Supported variables are exactly:
 
 ```text
 [نام]
@@ -57,17 +49,16 @@ Campaign message rendering currently supports these exact variables:
 [نام کسب‌وکار]
 ```
 
-Variables are resolved when the campaign is created. The rendered message is stored on each recipient, so later template/customer changes do not alter an existing campaign.
+Variables are resolved when a campaign is created. The rendered message is stored on each recipient, so later customer or template changes do not modify an existing campaign.
 
 Maximum campaign message length: **2000 characters**.
-
 Maximum recipients per campaign: **10,000**.
 
 ---
 
 # 1. Templates
 
-Templates are reusable SMS message definitions belonging to a business.
+Templates are reusable SMS message definitions belonging to a business. They should be managed under Settings rather than added to the main application navigation.
 
 ## 1.1 List templates
 
@@ -75,29 +66,7 @@ Templates are reusable SMS message definitions belonging to a business.
 GET /api/businesses/{businessId}/sms/templates?activeOnly=true
 ```
 
-### Query
-
-| Parameter | Type | Default | Description |
-|---|---|---:|---|
-| `activeOnly` | boolean | `true` | When true, only active templates are returned. |
-
-### Response `200 OK`
-
-```json
-[
-  {
-    "id": "guid",
-    "businessId": "guid",
-    "name": "یادآوری مراجعه",
-    "content": "سلام [نام]، زمان مراجعه شما فرا رسیده است.",
-    "isActive": true,
-    "createdAt": "2026-09-06T10:00:00Z",
-    "updatedAt": null
-  }
-]
-```
-
----
+`activeOnly` defaults to `true`.
 
 ## 1.2 Get template
 
@@ -105,11 +74,7 @@ GET /api/businesses/{businessId}/sms/templates?activeOnly=true
 GET /api/businesses/{businessId}/sms/templates/{templateId}
 ```
 
-### Response
-
-`200 OK` with one `SmsTemplateResult`, or `404 Not Found` when the template does not exist in the business.
-
----
+Returns `200` or `404` when the template does not exist in the business.
 
 ## 1.3 Create template
 
@@ -118,8 +83,6 @@ POST /api/businesses/{businessId}/sms/templates
 Content-Type: application/json
 ```
 
-### Request
-
 ```json
 {
   "name": "یادآوری مراجعه",
@@ -127,20 +90,12 @@ Content-Type: application/json
 }
 ```
 
-### Rules
+Rules:
 
 - `name` is required.
 - `content` is required.
-- Template name must be unique within the business.
+- Template name is unique within the business.
 - New templates are active by default.
-
-### Responses
-
-- `201 Created`
-- `400 Bad Request` for validation/business-rule errors.
-- `403 Forbidden` when the user is not a business member.
-
----
 
 ## 1.4 Update template
 
@@ -148,8 +103,6 @@ Content-Type: application/json
 PUT /api/businesses/{businessId}/sms/templates/{templateId}
 Content-Type: application/json
 ```
-
-### Request
 
 ```json
 {
@@ -159,18 +112,13 @@ Content-Type: application/json
 }
 ```
 
-### Responses
-
-- `200 OK`
-- `404 Not Found`
-- `400 Bad Request`
-- `403 Forbidden`
+There is no delete operation. Use `isActive` to disable a template.
 
 ---
 
 # 2. Campaigns
 
-A campaign is the actual SMS sending operation. The campaign stores a snapshot of recipients' mobile numbers and rendered messages.
+A campaign represents an SMS sending operation. A campaign stores a snapshot of recipient mobile numbers and rendered messages.
 
 ## 2.1 List campaigns
 
@@ -178,15 +126,19 @@ A campaign is the actual SMS sending operation. The campaign stores a snapshot o
 GET /api/businesses/{businessId}/sms/campaigns
 ```
 
-### Query parameters
+Query parameters:
 
-| Parameter | Type | Default | Description |
-|---|---|---:|---|
-| `status` | integer/enum | null | Optional campaign status filter. |
-| `page` | integer | `1` | Page number. |
-| `pageSize` | integer | `20` | Page size; normalized by the backend pagination helper. |
+| Parameter | Type | Default |
+|---|---|---:|
+| `status` | integer/enum | null |
+| `page` | integer | 1 |
+| `pageSize` | integer | 20 |
 
-### Campaign statuses
+Response is the standard `PagedResult<SmsCampaignResult>` with `items`, `page`, `pageSize`, and `totalCount`.
+
+The list response contains summary counts only and **does not include recipients**.
+
+Campaign statuses:
 
 ```text
 1 = Scheduled
@@ -197,20 +149,12 @@ GET /api/businesses/{businessId}/sms/campaigns
 6 = Cancelled
 ```
 
-### Response
-
-The endpoint returns the project's standard `PagedResult<SmsCampaignResult>` shape. The frontend should use the actual `items`, `page`, `pageSize`, `totalCount` fields returned by the common pagination contract already used by the API.
-
-Each campaign item contains summary counts:
+Summary fields:
 
 - `recipientCount`
 - `acceptedCount`
 - `deliveredCount`
 - `failedCount`
-
-Recipients are not included in the list response.
-
----
 
 ## 2.2 Get campaign
 
@@ -218,51 +162,11 @@ Recipients are not included in the list response.
 GET /api/businesses/{businessId}/sms/campaigns/{campaignId}?includeRecipients=true
 ```
 
-### Query
+`includeRecipients` defaults to `true`.
 
-| Parameter | Type | Default | Description |
-|---|---|---:|---|
-| `includeRecipients` | boolean | `true` | Include recipient details in the response. |
+Recipient fields include customer, mobile, rendered message, provider message ID, submission/delivery timestamps, and failure reason.
 
-### Response
-
-```json
-{
-  "id": "guid",
-  "businessId": "guid",
-  "templateId": "guid-or-null",
-  "createdByUserId": "guid",
-  "name": "یادآوری مشتریان",
-  "message": "سلام [نام]، زمان مراجعه شما فرا رسیده است.",
-  "scheduledAt": "2026-09-06T12:00:00Z",
-  "status": 1,
-  "startedAt": null,
-  "completedAt": null,
-  "cancelledAt": null,
-  "createdAt": "2026-09-06T11:00:00Z",
-  "updatedAt": null,
-  "recipientCount": 2,
-  "acceptedCount": 0,
-  "deliveredCount": 0,
-  "failedCount": 0,
-  "recipients": [
-    {
-      "id": "guid",
-      "customerId": "guid",
-      "customerName": "علی رضایی",
-      "mobile": "09xxxxxxxxx",
-      "renderedMessage": "سلام علی، زمان مراجعه شما فرا رسیده است.",
-      "status": 1,
-      "providerMessageId": null,
-      "submittedAt": null,
-      "deliveredAt": null,
-      "failureReason": null
-    }
-  ]
-}
-```
-
-### Recipient statuses
+Recipient statuses:
 
 ```text
 1 = Pending
@@ -271,9 +175,7 @@ GET /api/businesses/{businessId}/sms/campaigns/{campaignId}?includeRecipients=tr
 4 = Failed
 ```
 
-Important: `Submitted` means the provider accepted/submitted the message. It does **not** mean the SMS has reached the handset. `Delivered` is the later delivery state and will be supported by the real provider/webhook integration.
-
----
+**Important:** `Submitted` means the provider accepted/submitted the SMS. It does not mean delivery to the handset. Only `Delivered` represents delivery.
 
 ## 2.3 Create campaign
 
@@ -281,8 +183,6 @@ Important: `Submitted` means the provider accepted/submitted the message. It doe
 POST /api/businesses/{businessId}/sms/campaigns
 Content-Type: application/json
 ```
-
-### Request
 
 ```json
 {
@@ -297,61 +197,27 @@ Content-Type: application/json
 }
 ```
 
-### Fields
+Fields:
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `templateId` | GUID/null | No | Active template belonging to the same business. |
+| `templateId` | GUID/null | No | Active template in the same business. |
 | `name` | string/null | No | Optional campaign name. |
-| `message` | string | Yes | SMS content; max 2000 characters. |
-| `scheduledAt` | DateTime/null | No | Future UTC time. If omitted, campaign is eligible for immediate background processing. |
-| `customerIds` | GUID[] | Yes | One or more customers; max 10,000. |
+| `message` | string | Yes | SMS content, max 2000 chars. |
+| `scheduledAt` | DateTime/null | No | Future UTC time. Omit for send-now. |
+| `customerIds` | GUID[] | Yes | Active customers with mobile numbers; max 10,000. |
 
-### Backend validation
+The backend validates that all selected customers belong to the business, are active, exist, and have a mobile number. A supplied template must belong to the same business and be active.
 
-The selected customers must:
+At creation time the backend snapshots customer ID, mobile number, and rendered message. Later customer/template changes do not affect the campaign.
 
-- belong to the specified business;
-- be active;
-- exist;
-- have a mobile number.
+### Send now semantics
 
-The template, when supplied, must belong to the same business and be active.
+Omitting `scheduledAt` does **not** mean the HTTP request synchronously sends all SMS messages. The campaign is created with the current UTC time and becomes eligible for the background worker.
 
-### Important behavior
+Therefore the UI should say **«درخواست ارسال ثبت شد»** or equivalent rather than claiming immediate handset delivery.
 
-At creation time the backend snapshots:
-
-- customer ID;
-- mobile number;
-- rendered message;
-- campaign message/template context.
-
-Therefore the frontend should not expect a later customer/template edit to modify an already-created campaign.
-
-### Response
-
-`201 Created` with the complete `SmsCampaignResult`, including recipients.
-
-### Errors
-
-`400 Bad Request` can be returned for validation/business rules, for example:
-
-```json
-{
-  "error": "At least one customer is required."
-}
-```
-
-or:
-
-```json
-{
-  "error": "All selected customers must have a mobile number."
-}
-```
-
----
+Response: `201 Created` with the created campaign and recipients.
 
 ## 2.4 Cancel scheduled campaign
 
@@ -359,148 +225,163 @@ or:
 POST /api/businesses/{businessId}/sms/campaigns/{campaignId}/cancel
 ```
 
-No request body is required.
-
-### Behavior
-
-Only campaigns in `Scheduled` status can be cancelled.
-
-### Responses
-
-- `200 OK` with updated campaign.
-- `404 Not Found` if the campaign does not exist in the business.
-- `409 Conflict` if the campaign is no longer scheduled.
-- `403 Forbidden` if the user is not a member of the business.
-
-Example conflict:
-
-```json
-{
-  "error": "Only scheduled campaigns can be cancelled."
-}
-```
+Only `Scheduled` campaigns can be cancelled. A non-scheduled campaign returns `409 Conflict`.
 
 ---
 
-# 3. Frontend flows
+# 3. Approved frontend flows
 
-The backend is intentionally designed so the UI can reuse one SMS Composer.
+SMS must remain contextual and must not become a top-level navigation item.
 
 ## Customer Details
 
 ```text
-Customer Details
-   -> Send SMS
+Customer Profile
+   -> ارسال SMS
    -> SMS Composer
-   -> POST campaigns
+   -> POST /campaigns
 ```
+
+The Composer opens with the current customer preselected.
 
 ## Customer List
 
 ```text
 Customer List
    -> select customers
-   -> Send SMS
+   -> ارسال SMS
    -> SMS Composer
-   -> POST campaigns
+   -> POST /campaigns
 ```
+
+Customer selection must support search by customer name/mobile. The existing server-side customer search API should be used; the frontend must not assume that the first 100 customers represent the complete customer set.
 
 ## Smart List
 
 ```text
 Smart List
-   -> Send SMS to this list
+   -> ارسال SMS به این لیست
+   -> audience preview
    -> SMS Composer
-   -> POST campaigns
+   -> POST /campaigns
 ```
 
-The selected Smart List audience should be resolved to customer IDs by the frontend before calling `POST campaigns`. The campaign becomes a snapshot and subsequent Smart List changes do not affect it.
+The frontend resolves the Smart List to customer IDs before creating the campaign. The campaign stores a snapshot and must not depend on later changes to the Smart List.
+
+Before opening the Composer, show the audience size, for example:
+
+```text
+موعد گذشته
+42 مشتری
+[ارسال SMS به 42 مشتری]
+```
+
+The Composer must allow reviewing and removing recipients before submission.
 
 ## Appointment
 
-The frontend can provide a contextual `Send SMS` action from an appointment and pass the relevant customer ID into the same Composer.
+An appointment may expose a contextual `ارسال SMS` action for its customer. It opens the same Composer with that customer preselected.
 
 ## Settings / Templates
 
-Template management should use the four template endpoints under `/templates`.
+Template management uses the four template endpoints. Campaign history should be presented as a secondary SMS management view under Settings; SMS is not added to the main navigation.
 
 ---
 
-# 4. Composer behavior expected by the API
+# 4. SMS Composer UX contract
 
-The Composer should support:
+The project is Persian-first, RTL, responsive, and uses Persian date/time controls. The Composer must follow the same visual and interaction conventions as the existing CRM pages.
 
-1. Recipient selection/list preview.
-2. Template selection.
-3. Message editing after selecting a template.
-4. Supported variable insertion:
-   - `[نام]`
-   - `[نام خانوادگی]`
-   - `[نام کامل]`
-   - `[نام کسب‌وکار]`
-5. Preview with resolved customer data where applicable.
-6. Character/segment counter can be implemented client-side; the backend currently enforces a 2000-character maximum but does not expose SMS segment calculation.
-7. Send now by omitting `scheduledAt`.
-8. Schedule by sending a future UTC `scheduledAt`.
-9. After creation, navigate/show the resulting campaign status.
+## 4.1 Recipient section
 
----
+Two modes are supported:
 
-# 5. Background sending behavior
-
-The backend contains a hosted SMS worker.
-
-It periodically searches for:
+### Contextual recipient
 
 ```text
-Status == Scheduled
-AND ScheduledAt <= current UTC time
+مشتری
+علی رضایی   0912...
 ```
 
-It changes the campaign to `Sending`, sends pending recipients in batches, and then determines the final campaign status.
+The recipient is already selected.
 
-Current batch sizes:
-
-- maximum 10 due campaigns per polling cycle;
-- maximum 100 recipients per provider batch.
-
-The polling interval is configured in Development configuration:
-
-```json
-{
-  "Sms": {
-    "PollingIntervalSeconds": 10
-  }
-}
-```
-
-The current development provider is a logging/simulation provider. It does **not** send real SMS. It returns accepted/submitted results with generated development provider message IDs.
-
----
-
-# 6. Current limitations / not yet implemented
-
-The frontend agent must not invent endpoints for these capabilities yet:
-
-- Edit an existing scheduled campaign: **not implemented**.
-- Real SMS provider integration: **not implemented; development logging provider is active**.
-- Delivery-status webhook: **not implemented yet**.
-- Retry failed recipients: **not implemented**.
-- SMS segment calculation from the backend: **not implemented**.
-- Draft campaign state: **not implemented**.
-
-The currently available campaign write operations are therefore only:
+### Bulk recipient
 
 ```text
-Create
-Cancel (Scheduled only)
+گیرندگان: 42 مشتری
 ```
+
+The user can search, add, review, and remove recipients before creating the campaign.
+
+Show a clear validation message if there are no recipients or if the audience exceeds 10,000.
+
+## 4.2 Template section
+
+Provide an active-template selector. Selecting a template fills the message editor, but the message remains editable.
+
+## 4.3 Message editor
+
+Provide:
+
+- multiline message input;
+- variable insertion controls;
+- live character count;
+- maximum 2000-character validation;
+- RTL/Persian layout.
+
+Suggested variable controls:
+
+```text
+[+ نام] [+ نام خانوادگی] [+ نام کامل] [+ نام کسب‌وکار]
+```
+
+## 4.4 Preview
+
+Preview is client-side because the backend does not expose a preview endpoint.
+
+For a single recipient, show resolved data:
+
+```text
+متن:
+سلام [نام] عزیز، وقت مراجعه بعدی شما فرا رسیده است.
+
+پیش‌نمایش:
+سلام علی عزیز، وقت مراجعه بعدی شما فرا رسیده است.
+```
+
+For bulk recipients, show a small representative preview (for example up to three recipients) and make clear that the campaign will snapshot the rendered message for each recipient.
+
+## 4.5 Send now / Schedule
+
+Use an explicit choice:
+
+```text
+○ ارسال فوری
+● زمان‌بندی ارسال
+```
+
+When scheduling, use the project's Persian date/time picker. The selected value is converted to UTC ISO 8601 before sending to the API.
+
+For send-now, omit `scheduledAt`.
+
+## 4.6 Submit result
+
+After `POST /campaigns`, show the resulting campaign status. Do not claim that SMS is already delivered.
+
+Example:
+
+```text
+درخواست ارسال ثبت شد
+وضعیت: زمان‌بندی شده
+```
+
+The user should be able to navigate to campaign details/history.
 
 ---
 
-# 7. Recommended frontend status presentation
+# 5. Status presentation
 
-Use human-readable Persian labels in the UI, while sending/reading the numeric enum values from the API.
+Use Persian labels in UI while reading/sending numeric enum values.
 
 ### Campaign
 
@@ -522,11 +403,69 @@ Use human-readable Persian labels in the UI, while sending/reading the numeric e
 | 3 | تحویل شده |
 | 4 | ناموفق |
 
-Do not label `Submitted` as `Delivered`.
+Never display `Submitted` as `Delivered`.
 
 ---
 
-# 8. API summary
+# 6. Background sending
+
+The backend contains a hosted SMS worker. It looks for campaigns where:
+
+```text
+Status == Scheduled
+AND ScheduledAt <= current UTC time
+```
+
+Current development settings:
+
+```json
+{
+  "Sms": {
+    "PollingIntervalSeconds": 10
+  }
+}
+```
+
+Current batch limits:
+
+- maximum 10 due campaigns per polling cycle;
+- maximum 100 recipients per provider batch.
+
+The current provider is a logging/simulation provider. It does not send real SMS and returns accepted/submitted development results with generated provider message IDs.
+
+The frontend must not hard-code the 10-second polling value or imply that it is a delivery SLA.
+
+---
+
+# 7. Performance and data-loading rules
+
+Campaign List is a summary endpoint. It must not load all recipient entities for the requested page merely to calculate counts. Recipient details are loaded only by the campaign detail endpoint when requested.
+
+This keeps large campaigns (up to 10,000 recipients) from unnecessarily inflating list queries.
+
+---
+
+# 8. Current limitations / not implemented
+
+The frontend must not invent endpoints for capabilities not implemented by the backend:
+
+- Edit an existing scheduled campaign: **not implemented**.
+- Real SMS provider: **not implemented; development logging provider is active**.
+- Delivery webhook: **not implemented**.
+- Retry failed recipients: **not implemented**.
+- Backend SMS segment calculation: **not implemented**.
+- Draft campaign state: **not implemented**.
+
+Current campaign write operations are:
+
+```text
+Create
+Cancel (Scheduled only)
+```
+
+---
+
+# 9. API summary
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -538,5 +477,3 @@ Do not label `Submitted` as `Delivered`.
 | GET | `/api/businesses/{businessId}/sms/campaigns/{campaignId}` | Get campaign |
 | POST | `/api/businesses/{businessId}/sms/campaigns` | Create/send/schedule campaign |
 | POST | `/api/businesses/{businessId}/sms/campaigns/{campaignId}/cancel` | Cancel scheduled campaign |
-
-This is the complete SMS API surface currently implemented by the backend.
