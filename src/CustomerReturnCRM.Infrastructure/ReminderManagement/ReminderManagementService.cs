@@ -12,15 +12,7 @@ public sealed class ReminderManagementService : IReminderManagementService
 
     public ReminderManagementService(ApplicationDbContext dbContext) => _dbContext = dbContext;
 
-    public async Task<PagedResult<ReminderResult>> ListAsync(
-        Guid businessId,
-        Guid userId,
-        ReminderStatus? status,
-        DateTime? from,
-        DateTime? to,
-        int page = 1,
-        int pageSize = 20,
-        CancellationToken cancellationToken = default)
+    public async Task<PagedResult<ReminderResult>> ListAsync(Guid businessId, Guid userId, ReminderStatus? status, DateTime? from, DateTime? to, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default)
     {
         await EnsureMemberAsync(businessId, userId, cancellationToken);
         var query = _dbContext.Reminders.AsNoTracking().Where(x => x.BusinessId == businessId);
@@ -35,7 +27,22 @@ public sealed class ReminderManagementService : IReminderManagementService
             .ThenBy(x => x.DueAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(x => ToResult(x))
+            .Select(x => new ReminderResult(
+                x.Id,
+                x.BusinessId,
+                x.CustomerId,
+                (x.Customer.FirstName + " " + (x.Customer.LastName ?? "")).Trim(),
+                x.Customer.Mobile,
+                x.ServiceId,
+                x.Service != null ? x.Service.Title : null,
+                x.Title,
+                x.DueAt,
+                x.Status,
+                x.Note,
+                x.CreatedByUserId,
+                x.CompletedAt,
+                x.CreatedAt,
+                x.UpdatedAt))
             .ToListAsync(cancellationToken);
         return Pagination.Create(items, page, pageSize, total);
     }
@@ -45,7 +52,22 @@ public sealed class ReminderManagementService : IReminderManagementService
         await EnsureMemberAsync(businessId, userId, cancellationToken);
         return await _dbContext.Reminders.AsNoTracking()
             .Where(x => x.BusinessId == businessId && x.Id == reminderId)
-            .Select(x => ToResult(x))
+            .Select(x => new ReminderResult(
+                x.Id,
+                x.BusinessId,
+                x.CustomerId,
+                (x.Customer.FirstName + " " + (x.Customer.LastName ?? "")).Trim(),
+                x.Customer.Mobile,
+                x.ServiceId,
+                x.Service != null ? x.Service.Title : null,
+                x.Title,
+                x.DueAt,
+                x.Status,
+                x.Note,
+                x.CreatedByUserId,
+                x.CompletedAt,
+                x.CreatedAt,
+                x.UpdatedAt))
             .SingleOrDefaultAsync(cancellationToken);
     }
 
@@ -58,7 +80,6 @@ public sealed class ReminderManagementService : IReminderManagementService
 
         if (!await _dbContext.Customers.AnyAsync(x => x.BusinessId == businessId && x.Id == request.CustomerId && x.IsActive, cancellationToken))
             throw new ArgumentException("Customer does not belong to the business or is inactive.");
-
         if (request.ServiceId.HasValue && !await _dbContext.Services.AnyAsync(x => x.BusinessId == businessId && x.Id == request.ServiceId.Value && x.IsActive, cancellationToken))
             throw new ArgumentException("Service does not belong to the business or is inactive.");
 
@@ -70,7 +91,7 @@ public sealed class ReminderManagementService : IReminderManagementService
         };
         _dbContext.Reminders.Add(reminder);
         await _dbContext.SaveChangesAsync(cancellationToken);
-        return ToResult(reminder);
+        return (await GetAsync(businessId, reminder.Id, userId, cancellationToken))!;
     }
 
     public Task<ReminderResult?> CompleteAsync(Guid businessId, Guid reminderId, Guid userId, CompleteReminderRequest request, CancellationToken cancellationToken = default) =>
@@ -79,33 +100,24 @@ public sealed class ReminderManagementService : IReminderManagementService
     public Task<ReminderResult?> CancelAsync(Guid businessId, Guid reminderId, Guid userId, CancellationToken cancellationToken = default) =>
         ChangeStatusAsync(businessId, reminderId, userId, ReminderStatus.Cancelled, null, cancellationToken);
 
-    private async Task<ReminderResult?> ChangeStatusAsync(
-        Guid businessId,
-        Guid reminderId,
-        Guid userId,
-        ReminderStatus status,
-        string? completionNote,
-        CancellationToken cancellationToken)
+    private async Task<ReminderResult?> ChangeStatusAsync(Guid businessId, Guid reminderId, Guid userId, ReminderStatus status, string? completionNote, CancellationToken cancellationToken)
     {
         await EnsureMemberAsync(businessId, userId, cancellationToken);
         var reminder = await _dbContext.Reminders.SingleOrDefaultAsync(x => x.BusinessId == businessId && x.Id == reminderId, cancellationToken);
         if (reminder is null) return null;
-        if (reminder.Status != ReminderStatus.Pending)
-            throw new InvalidOperationException("Only pending reminders can be completed or cancelled.");
+        if (reminder.Status != ReminderStatus.Pending) throw new InvalidOperationException("Only pending reminders can be completed or cancelled.");
 
         if (status == ReminderStatus.Completed && !string.IsNullOrWhiteSpace(completionNote))
         {
             var resultNote = $"نتیجه اقدام: {completionNote.Trim()}";
-            reminder.Note = string.IsNullOrWhiteSpace(reminder.Note)
-                ? resultNote
-                : $"{reminder.Note.Trim()}\n{resultNote}";
+            reminder.Note = string.IsNullOrWhiteSpace(reminder.Note) ? resultNote : $"{reminder.Note.Trim()}\n{resultNote}";
         }
 
         reminder.Status = status;
         reminder.CompletedAt = status == ReminderStatus.Completed ? DateTime.UtcNow : null;
         reminder.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync(cancellationToken);
-        return ToResult(reminder);
+        return await GetAsync(businessId, reminder.Id, userId, cancellationToken);
     }
 
     private async Task EnsureMemberAsync(Guid businessId, Guid userId, CancellationToken cancellationToken)
@@ -115,5 +127,4 @@ public sealed class ReminderManagementService : IReminderManagementService
     }
 
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    private static ReminderResult ToResult(Reminder x) => new(x.Id, x.BusinessId, x.CustomerId, x.ServiceId, x.Title, x.DueAt, x.Status, x.Note, x.CreatedByUserId, x.CompletedAt, x.CreatedAt, x.UpdatedAt);
 }
