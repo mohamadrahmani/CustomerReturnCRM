@@ -8,7 +8,7 @@ public sealed class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Ap
     public ApplicationDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-        optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=CustomerReturnCRM;Trusted_Connection=True;TrustServerCertificate=True;", sql => sql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
+        optionsBuilder.UseSqlServer("Server=localhost;Database=CustomerReturnCRM;User Id=sa;Password=YOUR_LOCAL_SQL_PASSWORD;TrustServerCertificate=True;MultipleActiveResultSets=True", sql => sql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
         return new ApplicationDbContext(optionsBuilder.Options);
     }
 }
