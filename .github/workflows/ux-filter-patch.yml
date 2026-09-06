@@ -1,0 +1,72 @@
+name: Apply UX filter improvements
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch customer search and reminder date filters
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          visits = Path('src/CustomerReturnCRM.Web/src/app/visits/page.tsx')
+          text = visits.read_text(encoding='utf-8')
+          text = text.replace(
+              'import { PersianDatePicker, PersianDateTimePicker } from "@/components/persian-date-picker";\n',
+              'import { PersianDatePicker, PersianDateTimePicker } from "@/components/persian-date-picker";\nimport { CustomerPicker } from "@/components/customer-picker";\n', 1)
+          old_customer = '<select value={customerId} onChange={e => setCustomerId(e.target.value)} className="crm-input w-full"><option value="">انتخاب مشتری</option>{customers.data?.items.map(c => <option key={c.id} value={c.id}>{nameOf(c)} · {c.mobile}</option>)}</select>'
+          text = text.replace(old_customer, '<CustomerPicker items={customers.data?.items ?? []} value={customerId} onChange={setCustomerId} required />', 1)
+          old_datetime = '<input type="datetime-local" value={visitAt} onChange={e => setVisitAt(e.target.value)} className="crm-input w-full" />'
+          text = text.replace(old_datetime, '<PersianDateTimePicker value={visitAt} onChange={setVisitAt} />', 1)
+          visits.write_text(text, encoding='utf-8')
+
+          followups = Path('src/CustomerReturnCRM.Web/src/app/follow-ups/page.tsx')
+          text = followups.read_text(encoding='utf-8')
+          text = text.replace(
+              'import { PersianDateTimePicker } from "../../components/persian-date-picker";\n',
+              'import { PersianDateTimePicker, PersianDatePicker } from "../../components/persian-date-picker";\nimport { CustomerPicker } from "../../components/customer-picker";\n', 1)
+          text = text.replace(
+              'const [status, setStatus] = useState<number | null>(0);\n  const [page, setPage] = useState(1);',
+              'const [status, setStatus] = useState<number | null>(0);\n  const [page, setPage] = useState(1);\n  const [from, setFrom] = useState("");\n  const [to, setTo] = useState("");', 1)
+          text = text.replace(
+              'queryKey: ["reminders", activeBusinessId, status, page],\n    queryFn: () => getReminders(activeBusinessId!, status, page, 20),',
+              'queryKey: ["reminders", activeBusinessId, status, page, from, to],\n    queryFn: () => getReminders(activeBusinessId!, status, page, 20, from, to),', 1)
+          old_status = '''      <div className="flex gap-2 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2">\n        {[[null, "همه"], [0, "باز"], [1, "انجام‌شده"], [2, "لغوشده"]].map(([value, label]) => (\n          <button key={String(value)} onClick={() => { setStatus(value as number | null); setPage(1); }} className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium ${status === value ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}>{label}</button>\n        ))}\n      </div>'''
+          new_status = '''      <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3">\n        <div className="flex gap-2 overflow-x-auto">\n          {[[null, "همه"], [0, "باز"], [1, "انجام‌شده"], [2, "لغوشده"]].map(([value, label]) => (\n            <button key={String(value)} onClick={() => { setStatus(value as number | null); setPage(1); }} className={`whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium ${status === value ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}>{label}</button>\n          ))}\n        </div>\n        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto]">\n          <label><span className="mb-1 block text-[11px] font-bold text-slate-600">از تاریخ</span><PersianDatePicker value={from} onChange={value => { setFrom(value); setPage(1); }} /></label>\n          <label><span className="mb-1 block text-[11px] font-bold text-slate-600">تا تاریخ</span><PersianDatePicker value={to} onChange={value => { setTo(value); setPage(1); }} /></label>\n          <button type="button" onClick={() => { const d = new Date(); const value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; setFrom(value); setTo(value); setPage(1); }} className="crm-secondary-action self-end">امروز</button>\n          <button type="button" onClick={() => { setFrom(""); setTo(""); setPage(1); }} className="crm-secondary-action self-end">همه تاریخ‌ها</button>\n        </div>\n      </div>'''
+          if old_status not in text:
+              raise SystemExit('follow-up status block not found')
+          text = text.replace(old_status, new_status, 1)
+          old_customer = '<select value={customerId} onChange={e => setCustomerId(e.target.value)} className="w-full rounded-xl border px-3 py-2.5" required><option value="">انتخاب مشتری</option>{customers.data?.items.map(x => <option key={x.id} value={x.id}>{x.firstName} {x.lastName ?? ""} — {x.mobile}</option>)}</select>'
+          text = text.replace(old_customer, '<CustomerPicker items={customers.data?.items ?? []} value={customerId} onChange={setCustomerId} required />', 1)
+          followups.write_text(text, encoding='utf-8')
+
+          api = Path('src/CustomerReturnCRM.Web/src/lib/api.ts')
+          text = api.read_text(encoding='utf-8')
+          old_fn = 'export async function getReminders(businessId: string, status: number | null = null, page = 1, pageSize = 20) { const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) }); if (status !== null) params.set("status", String(status)); return apiFetch<PagedResult<Reminder>>(`/api/businesses/${businessId}/reminders?${params.toString()}`); }'
+          new_fn = 'export async function getReminders(businessId: string, status: number | null = null, page = 1, pageSize = 20, from = "", to = "") { const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) }); if (status !== null) params.set("status", String(status)); if (from) params.set("from", `${from}T00:00:00`); if (to) params.set("to", `${to}T23:59:59`); return apiFetch<PagedResult<Reminder>>(`/api/businesses/${businessId}/reminders?${params.toString()}`); }'
+          if old_fn not in text:
+              raise SystemExit('getReminders function not found')
+          api.write_text(text.replace(old_fn, new_fn, 1), encoding='utf-8')
+
+          workflow = Path('.github/workflows/ux-filter-patch.yml')
+          # Keep this workflow out of the final repository after applying the patch.
+          # It is removed before staging so the resulting commit contains only product changes.
+          workflow.unlink()
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/CustomerReturnCRM.Web/src/app/visits/page.tsx src/CustomerReturnCRM.Web/src/app/follow-ups/page.tsx src/CustomerReturnCRM.Web/src/lib/api.ts .github/workflows/ux-filter-patch.yml
+          git commit -m "feat: add searchable customers and reminder date filters"
+          git push
