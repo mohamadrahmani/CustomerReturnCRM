@@ -1,9 +1,71 @@
-bin/
-obj/
+# =========================
+# .NET
+# =========================
+
+**/bin/
+**/obj/
+
+# Visual Studio
 .vs/
 .idea/
 *.user
 *.suo
 *.userosscache
 *.sln.docstates
+
+# Rider / ReSharper
+.idea/
+*.sln.iml
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+# Test results
+TestResults/
+*.trx
+
+# =========================
+# ASP.NET / Local settings
+# =========================
+
+# Local development settings
 appsettings.Local.json
+appsettings.Development.local.json
+
+# =========================
+# Next.js
+# =========================
+
+**/.next/
+**/node_modules/
+
+# Next.js generated files
+next-env.d.ts
+
+# =========================
+# Environment / Secrets
+# =========================
+
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =========================
+# OS
+# =========================
+
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+
+*.log
