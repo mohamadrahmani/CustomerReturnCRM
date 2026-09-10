@@ -1,20 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5108";
 type Appointment = { businessName: string; address: string | null; city: string | null; customerName: string; serviceTitle: string; staffName: string; startAt: string; endAt: string; status: string };
 
-export default function PublicAppointmentPage({ params }: { params: { publicCode: string } }) {
+export default function PublicAppointmentPage({ params }: { params: Promise<{ publicCode: string }> }) {
+  const { publicCode } = use(params);
   const [data, setData] = useState<Appointment | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`${API}/api/public/appointments/${encodeURIComponent(params.publicCode)}`)
+    fetch(`${API}/api/public/appointments/${encodeURIComponent(publicCode)}`)
       .then(async r => { if (!r.ok) throw new Error("نوبت پیدا نشد."); return r.json(); })
       .then(setData)
       .catch(e => setError(e.message));
-  }, [params.publicCode]);
+  }, [publicCode]);
 
   if (!data) return <main dir="rtl" className="min-h-screen bg-slate-50 p-6"><div className="mx-auto max-w-xl rounded-3xl bg-white p-8 shadow-sm">{error || "در حال بارگذاری..."}</div></main>;
 
