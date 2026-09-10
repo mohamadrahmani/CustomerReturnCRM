@@ -13,7 +13,7 @@ public sealed class AvailabilityManagementService : IAvailabilityManagementServi
     public async Task<IReadOnlyList<WorkingHourResult>> GetBusinessWorkingHoursAsync(Guid businessId, Guid userId, CancellationToken ct = default)
     {
         await EnsureMemberAsync(businessId, userId, ct);
-        return await _db.Set<BusinessWorkingHour>().AsNoTracking().Where(x => x.BusinessId == businessId).OrderBy(x => x.DayOfWeek).ThenBy(x => x.StartTime).Select(ToResult).ToListAsync(ct);
+        return await _db.Set<BusinessWorkingHour>().AsNoTracking().Where(x => x.BusinessId == businessId).OrderBy(x => x.DayOfWeek).ThenBy(x => x.StartTime).Select(x => new WorkingHourResult(x.Id, x.DayOfWeek, x.StartTime, x.EndTime)).ToListAsync(ct);
     }
 
     public async Task<IReadOnlyList<WorkingHourResult>> ReplaceBusinessWorkingHoursAsync(Guid businessId, Guid userId, IReadOnlyCollection<WorkingHourRequest> hours, CancellationToken ct = default)
@@ -29,7 +29,7 @@ public sealed class AvailabilityManagementService : IAvailabilityManagementServi
     public async Task<IReadOnlyList<WorkingHourResult>> GetStaffWorkingHoursAsync(Guid businessId, Guid staffId, Guid userId, CancellationToken ct = default)
     {
         await EnsureStaffAsync(businessId, staffId, userId, ct);
-        return await _db.Set<StaffWorkingHour>().AsNoTracking().Where(x => x.StaffId == staffId).OrderBy(x => x.DayOfWeek).ThenBy(x => x.StartTime).Select(ToResult).ToListAsync(ct);
+        return await _db.Set<StaffWorkingHour>().AsNoTracking().Where(x => x.StaffId == staffId).OrderBy(x => x.DayOfWeek).ThenBy(x => x.StartTime).Select(x => new WorkingHourResult(x.Id, x.DayOfWeek, x.StartTime, x.EndTime)).ToListAsync(ct);
     }
 
     public async Task<IReadOnlyList<WorkingHourResult>> ReplaceStaffWorkingHoursAsync(Guid businessId, Guid staffId, Guid userId, IReadOnlyCollection<WorkingHourRequest> hours, CancellationToken ct = default)
@@ -115,7 +115,7 @@ public sealed class AvailabilityManagementService : IAvailabilityManagementServi
     { if (!await _db.BusinessMembers.AnyAsync(x => x.BusinessId == businessId && x.UserId == userId, ct)) throw new UnauthorizedAccessException("The user is not a member of this business."); }
 
     private async Task EnsureStaffAsync(Guid businessId, Guid staffId, Guid userId, CancellationToken ct)
-    { await EnsureMemberAsync(businessId, userId, ct); if (!await _db.Staff.AnyAsync(x => x.Id == staffId && x.BusinessId == businessId && x.IsActive, ct)) throw new ArgumentException("Staff member was not found or is inactive."); }
+    { await EnsureMemberAsync(businessId, userId, ct); if (!await _db.Staff.AnyAsync(x => x.Id == staffId && x.BusinessId == businessId && x.IsActive, ct)) throw new ArgumentException("Staff member was not found or inactive."); }
 
     private static void ValidateHours(IReadOnlyCollection<WorkingHourRequest> hours)
     {
@@ -131,6 +131,4 @@ public sealed class AvailabilityManagementService : IAvailabilityManagementServi
     private static TimeSpan Max(TimeSpan a, TimeSpan b) => a > b ? a : b;
     private static TimeSpan Min(TimeSpan a, TimeSpan b) => a < b ? a : b;
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    private static WorkingHourResult ToResult(BusinessWorkingHour x) => new(x.Id, x.DayOfWeek, x.StartTime, x.EndTime);
-    private static WorkingHourResult ToResult(StaffWorkingHour x) => new(x.Id, x.DayOfWeek, x.StartTime, x.EndTime);
 }
