@@ -38,6 +38,8 @@ public sealed class BusinessSetupService : IBusinessSetupService
             Mobile = request.Mobile.Trim(),
             Address = NormalizeOptional(request.Address),
             City = NormalizeOptional(request.City),
+            PublicSlug = $"b-{Guid.NewGuid():N}"[..12],
+            PublicBookingEnabled = true,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
