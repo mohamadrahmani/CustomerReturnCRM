@@ -38,8 +38,11 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
             entity.Property(x => x.Mobile).HasMaxLength(30).IsRequired();
             entity.Property(x => x.Address).HasMaxLength(500);
             entity.Property(x => x.City).HasMaxLength(100);
+            entity.Property(x => x.Description).HasMaxLength(2000);
+            entity.Property(x => x.PublicSlug).HasMaxLength(120);
             entity.Property(x => x.CreatedAt).IsRequired();
             entity.HasIndex(x => x.Mobile);
+            entity.HasIndex(x => x.PublicSlug).IsUnique().HasFilter("[PublicSlug] IS NOT NULL");
         });
 
         builder.Entity<Staff>(entity =>
@@ -114,9 +117,11 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
             entity.HasKey(x => x.Id);
             entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
             entity.Property(x => x.Note).HasMaxLength(1000);
+            entity.Property(x => x.PublicCode).HasMaxLength(32).IsRequired();
             entity.Property(x => x.CreatedAt).IsRequired();
             entity.HasIndex(x => new { x.BusinessId, x.StartAt });
             entity.HasIndex(x => new { x.BusinessId, x.CustomerId, x.StartAt });
+            entity.HasIndex(x => x.PublicCode).IsUnique();
             entity.HasOne(x => x.Business).WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
         });
