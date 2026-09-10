@@ -4,6 +4,7 @@ using CustomerReturnCRM.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260906185214_AddSms")]
+    partial class AddSms
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -180,31 +183,6 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("BusinessMembers", (string)null);
-                });
-
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.BusinessWorkingHour", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("BusinessId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("DayOfWeek")
-                        .HasColumnType("int");
-
-                    b.Property<TimeSpan>("EndTime")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan>("StartTime")
-                        .HasColumnType("time");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BusinessId");
-
-                    b.ToTable("BusinessWorkingHour");
                 });
 
             modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Customer", b =>
@@ -701,56 +679,6 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                     b.ToTable("Staff", (string)null);
                 });
 
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.StaffTimeOff", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("EndAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Reason")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("StaffId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("StartAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StaffId");
-
-                    b.ToTable("StaffTimeOff");
-                });
-
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.StaffWorkingHour", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("DayOfWeek")
-                        .HasColumnType("int");
-
-                    b.Property<TimeSpan>("EndTime")
-                        .HasColumnType("time");
-
-                    b.Property<Guid>("StaffId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<TimeSpan>("StartTime")
-                        .HasColumnType("time");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("StaffId");
-
-                    b.ToTable("StaffWorkingHour");
-                });
-
             modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Visit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1097,17 +1025,6 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                     b.Navigation("Business");
                 });
 
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.BusinessWorkingHour", b =>
-                {
-                    b.HasOne("CustomerReturnCRM.Domain.Entities.Business", "Business")
-                        .WithMany("WorkingHours")
-                        .HasForeignKey("BusinessId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Business");
-                });
-
             modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Customer", b =>
                 {
                     b.HasOne("CustomerReturnCRM.Domain.Entities.Business", "Business")
@@ -1258,28 +1175,6 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                     b.Navigation("Business");
                 });
 
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.StaffTimeOff", b =>
-                {
-                    b.HasOne("CustomerReturnCRM.Domain.Entities.Staff", "Staff")
-                        .WithMany("TimeOffs")
-                        .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Staff");
-                });
-
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.StaffWorkingHour", b =>
-                {
-                    b.HasOne("CustomerReturnCRM.Domain.Entities.Staff", "Staff")
-                        .WithMany("WorkingHours")
-                        .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Staff");
-                });
-
             modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Visit", b =>
                 {
                     b.HasOne("CustomerReturnCRM.Domain.Entities.Appointment", "Appointment")
@@ -1394,20 +1289,11 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                     b.Navigation("Members");
 
                     b.Navigation("Staff");
-
-                    b.Navigation("WorkingHours");
                 });
 
             modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.SmsCampaign", b =>
                 {
                     b.Navigation("Recipients");
-                });
-
-            modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Staff", b =>
-                {
-                    b.Navigation("TimeOffs");
-
-                    b.Navigation("WorkingHours");
                 });
 
             modelBuilder.Entity("CustomerReturnCRM.Domain.Entities.Visit", b =>
