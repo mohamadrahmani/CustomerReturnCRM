@@ -1,6 +1,32 @@
 import { readAuth } from "./auth";
+import type { SmsCampaignStatus, SmsRecipientStatus } from "./sms";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5108";
-export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> { const auth = readAuth(); const headers = new Headers(init.headers); headers.set("Content-Type", "application/json"); if (auth?.token) headers.set("Authorization", `Bearer ${auth.token}`); const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers }); if (response.status === 401 && typeof window !== "undefined") { sessionStorage.removeItem("crm_auth"); sessionStorage.removeItem("crm_business_id"); window.location.href = "/login"; throw new Error("نشست شما منقضی شده است."); } if (!response.ok) { let message = `Request failed (${response.status})`; try { const body = await response.json(); message = body.error ?? message; } catch { /* status message */ } throw new Error(message); } if (response.status === 204) return undefined as T; return response.json() as Promise<T>; }
+
+export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const auth = readAuth();
+  const headers = new Headers(init.headers);
+  headers.set("Content-Type", "application/json");
+  if (auth?.token) headers.set("Authorization", `Bearer ${auth.token}`);
+  const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
+  if (response.status === 401 && typeof window !== "undefined") {
+    sessionStorage.removeItem("crm_auth");
+    sessionStorage.removeItem("crm_business_id");
+    window.location.href = "/login";
+    throw new Error("نشست شما منقضی شده است.");
+  }
+  if (!response.ok) {
+    let message = `Request failed (${response.status})`;
+    try {
+      const body = await response.json();
+      message = body.error ?? message;
+    } catch { /* status message */ }
+    throw new Error(message);
+  }
+  if (response.status === 204) return undefined as T;
+  return response.json() as Promise<T>;
+}
+
 export type AuthenticationBusiness = { id: string; name: string; role: string };
 export type AuthenticationResult = { userId: string; email: string; token: string; expiresAt: string; businesses: AuthenticationBusiness[] };
 export type BusinessSetupRequest = { name: string; businessType: string; mobile: string; address?: string; city?: string; firstName: string; lastName: string; staffMobile?: string; serviceTemplateId?: string };
@@ -21,6 +47,7 @@ export type Reminder = { id: string; businessId: string; customerId: string; cus
 export type ExpectedReturn = { serviceId: string; serviceTitle: string; lastVisitAt: string; suggestedReturnDays: number; expectedReturnDate: string; daysFromExpectedReturn: number; hasFutureAppointment: boolean };
 export type CustomerReturnAnalysis = { customerId: string; customerName: string; mobile: string; services: ExpectedReturn[] };
 export type CustomerProfile = { customer: Customer; visits: CustomerProfileVisit[]; futureAppointments: CustomerProfileAppointment[]; reminders: CustomerProfileReminder[]; returnAnalysis: CustomerReturnAnalysis };
+
 export async function login(email: string, password: string) { return apiFetch<AuthenticationResult>("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function register(email: string, password: string) { return apiFetch<AuthenticationResult>("/api/auth/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
 export async function createBusiness(request: BusinessSetupRequest) { return apiFetch<BusinessSetupResult>("/api/businesses", { method: "POST", body: JSON.stringify(request) }); }
@@ -41,3 +68,35 @@ export async function createStaff(businessId: string, request: { firstName: stri
 export async function updateStaff(businessId: string, staffId: string, request: { firstName: string; lastName: string; mobile?: string; isActive: boolean }) { return apiFetch<Staff>(`/api/businesses/${businessId}/staff/${staffId}`, { method: "PUT", body: JSON.stringify(request) }); }
 export async function getDismissedSmartLists(businessId: string, page = 1, pageSize = 15) { return apiFetch<PagedResult<DashboardSmartListItem>>(`/api/businesses/${businessId}/smart-lists/dismissed?page=${page}&pageSize=${pageSize}`); }
 export async function restoreSmartListItem(businessId: string, item: { smartListType: string; customerId: string; serviceId: string | null }) { return apiFetch<void>(`/api/businesses/${businessId}/smart-lists/restore`, { method: "POST", body: JSON.stringify(item) }); }
+
+export type SmsTemplate = { id: string; businessId: string; name: string; content: string; isActive: boolean; createdAt: string; updatedAt: string | null };
+export type SmsRecipient = { id: string; customerId: string; customerName: string; mobile: string; renderedMessage: string | null; status: SmsRecipientStatus; providerMessageId: string | null; submittedAt: string | null; deliveredAt: string | null; failureReason: string | null };
+export type SmsCampaign = { id: string; businessId: string; templateId: string | null; createdByUserId: string; name: string | null; message: string; scheduledAt: string | null; status: SmsCampaignStatus; startedAt: string | null; completedAt: string | null; cancelledAt: string | null; createdAt: string; updatedAt: string | null; recipientCount: number; acceptedCount: number; deliveredCount: number; failedCount: number; recipients: SmsRecipient[] | null };
+export type CreateSmsCampaignRequest = { templateId?: string; name?: string; message: string; scheduledAt?: string; customerIds: string[] };
+
+export async function getSmsTemplates(businessId: string, activeOnly = true) {
+  return apiFetch<SmsTemplate[]>(`/api/businesses/${businessId}/sms/templates?activeOnly=${String(activeOnly)}`);
+}
+export async function getSmsTemplate(businessId: string, templateId: string) {
+  return apiFetch<SmsTemplate>(`/api/businesses/${businessId}/sms/templates/${templateId}`);
+}
+export async function createSmsTemplate(businessId: string, request: { name: string; content: string }) {
+  return apiFetch<SmsTemplate>(`/api/businesses/${businessId}/sms/templates`, { method: "POST", body: JSON.stringify(request) });
+}
+export async function updateSmsTemplate(businessId: string, templateId: string, request: { name: string; content: string; isActive: boolean }) {
+  return apiFetch<SmsTemplate>(`/api/businesses/${businessId}/sms/templates/${templateId}`, { method: "PUT", body: JSON.stringify(request) });
+}
+export async function getSmsCampaigns(businessId: string, status: SmsCampaignStatus | null = null, page = 1, pageSize = 20) {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  if (status !== null) params.set("status", String(status));
+  return apiFetch<PagedResult<SmsCampaign>>(`/api/businesses/${businessId}/sms/campaigns?${params.toString()}`);
+}
+export async function getSmsCampaign(businessId: string, campaignId: string, includeRecipients = true) {
+  return apiFetch<SmsCampaign>(`/api/businesses/${businessId}/sms/campaigns/${campaignId}?includeRecipients=${String(includeRecipients)}`);
+}
+export async function createSmsCampaign(businessId: string, request: CreateSmsCampaignRequest) {
+  return apiFetch<SmsCampaign>(`/api/businesses/${businessId}/sms/campaigns`, { method: "POST", body: JSON.stringify(request) });
+}
+export async function cancelSmsCampaign(businessId: string, campaignId: string) {
+  return apiFetch<SmsCampaign>(`/api/businesses/${businessId}/sms/campaigns/${campaignId}/cancel`, { method: "POST" });
+}

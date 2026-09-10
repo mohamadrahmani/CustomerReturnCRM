@@ -12,5 +12,5 @@ public sealed class Business : AuditableEntity
     public bool IsActive { get; set; } = true;
     public ICollection<BusinessMember> Members { get; set; } = new List<BusinessMember>();
     public ICollection<Staff> Staff { get; set; } = new List<Staff>();
+    public ICollection<BusinessWorkingHour> WorkingHours { get; set; } = new List<BusinessWorkingHour>();
 }
-
