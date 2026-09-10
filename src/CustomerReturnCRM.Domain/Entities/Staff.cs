@@ -11,4 +11,6 @@ public sealed class Staff : AuditableEntity
     public Guid? UserId { get; set; }
     public bool IsActive { get; set; } = true;
     public Business Business { get; set; } = null!;
+    public ICollection<StaffWorkingHour> WorkingHours { get; set; } = new List<StaffWorkingHour>();
+    public ICollection<StaffTimeOff> TimeOffs { get; set; } = new List<StaffTimeOff>();
 }
