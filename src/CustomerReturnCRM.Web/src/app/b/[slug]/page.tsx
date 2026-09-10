@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 
 const API = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5108";
 
@@ -10,7 +10,8 @@ type Profile = { businessId: string; name: string; mobile: string; address: stri
 type Slot = { staffId: string; startAt: string; endAt: string };
 type Booking = { publicDetailsUrl: string; startAt: string; endAt: string; serviceTitle: string; staffName: string };
 
-export default function PublicBookingPage({ params }: { params: { slug: string } }) {
+export default function PublicBookingPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [serviceId, setServiceId] = useState("");
   const [staffId, setStaffId] = useState("");
@@ -23,12 +24,12 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`${API}/api/public/businesses/${encodeURIComponent(params.slug)}/profile`)
+    fetch(`${API}/api/public/businesses/${encodeURIComponent(slug)}/profile`)
       .then(async r => { if (!r.ok) throw new Error("این صفحه رزرو در دسترس نیست."); return r.json(); })
       .then((data: Profile) => { setProfile(data); setServiceId(data.services[0]?.id ?? ""); })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
-  }, [params.slug]);
+  }, [slug]);
 
   useEffect(() => {
     setSlots([]); setSlot(null);
@@ -48,7 +49,7 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
     if (!profile || !selectedService || !slot) return;
     setError("");
     try {
-      const response = await fetch(`${API}/api/public/businesses/${encodeURIComponent(params.slug)}/bookings`, {
+      const response = await fetch(`${API}/api/public/businesses/${encodeURIComponent(slug)}/bookings`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ serviceId, staffId: slot.staffId, startAt: slot.startAt, ...form })
       });
