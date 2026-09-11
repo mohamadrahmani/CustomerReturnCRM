@@ -5,6 +5,7 @@ using CustomerReturnCRM.Domain.Entities;
 using CustomerReturnCRM.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace CustomerReturnCRM.API.Controllers;
@@ -92,12 +93,7 @@ public sealed class SmsController : ControllerBase
         var lineNumber = configuration["SMSLineNumber"] ?? configuration["Sms:SmsIr:LineNumber"] ?? string.Empty;
         var provider = configuration["Sms:Provider"] ?? string.Empty;
 
-        return Ok(new
-        {
-            provider,
-            apiKey = Mask(apiKey),
-            lineNumber = Mask(lineNumber)
-        });
+        return Ok(new { provider, apiKey = Mask(apiKey), lineNumber = Mask(lineNumber) });
     }
 
     private static string Mask(string value)
