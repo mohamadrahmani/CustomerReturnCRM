@@ -102,12 +102,8 @@ public sealed class PublicBookingService : IPublicBookingService
         {
             throw new InvalidOperationException("This customer record is inactive. Please contact the business.");
         }
-        else
-        {
-            customer.FirstName = request.FirstName.Trim();
-            customer.LastName = Normalize(request.LastName);
-            customer.UpdatedAt = DateTime.UtcNow;
-        }
+        // An existing CRM customer is intentionally not overwritten by public booking input.
+        // The mobile number identifies the CRM record; the customer remains the source of truth for identity data.
 
         var publicCode = await CreateUniqueCodeAsync(cancellationToken);
         var appointment = new Appointment
