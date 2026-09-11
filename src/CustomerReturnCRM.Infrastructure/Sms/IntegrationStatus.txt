@@ -1,0 +1,1 @@
+SMS.ir provider adapter implementation is on this branch. Configure Sms:Provider=SmsIr and provide credentials via environment/secret configuration before live sending.
