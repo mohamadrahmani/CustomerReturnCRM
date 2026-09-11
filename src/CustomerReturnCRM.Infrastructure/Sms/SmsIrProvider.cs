@@ -38,7 +38,9 @@ public sealed class SmsIrProvider : ISmsProvider
         var results = new List<SmsProviderResult>(messages.Count);
         foreach (var batch in messages.Chunk(100))
         {
-            var request = new { lineNumber = ParseLineNumber(), messageText = batch.First().Message, mobiles = batch.Select(x => x.Mobile).ToArray(), sendDateTime = (DateTime?)null };
+            var lineNumber = ParseLineNumber();
+            LogOutgoingRequest(lineNumber, batch.Select(x => x.Mobile));
+            var request = new { lineNumber, messageText = batch.First().Message, mobiles = batch.Select(x => x.Mobile).ToArray(), sendDateTime = (DateTime?)null };
             var response = await SendWithRetryAsync(HttpMethod.Post, "send/bulk", request, cancellationToken);
             var accepted = IsSuccess(response.StatusCode);
             var messageId = ExtractString(response.Json, "messageId", "id");
@@ -55,7 +57,9 @@ public sealed class SmsIrProvider : ISmsProvider
         var all = new List<SmsSendItemResult>();
         foreach (var batch in request.Mobiles.Chunk(100))
         {
-            var response = await SendWithRetryAsync(HttpMethod.Post, "send/bulk", new { lineNumber = ParseLineNumber(), messageText = request.Message, mobiles = batch.ToArray(), sendDateTime = (DateTime?)null }, ct);
+            var lineNumber = ParseLineNumber();
+            LogOutgoingRequest(lineNumber, batch);
+            var response = await SendWithRetryAsync(HttpMethod.Post, "send/bulk", new { lineNumber, messageText = request.Message, mobiles = batch.ToArray(), sendDateTime = (DateTime?)null }, ct);
             all.AddRange(ToSendResult(batch.ToArray(), response).Items);
         }
         return new SmsSendResult(all);
@@ -72,7 +76,9 @@ public sealed class SmsIrProvider : ISmsProvider
         {
             var batchMobiles = indexes.Select(i => mobiles[i]).ToArray();
             var batchMessages = indexes.Select(i => messages[i]).ToArray();
-            var response = await SendWithRetryAsync(HttpMethod.Post, "send/likeToLike", new { lineNumber = ParseLineNumber(), messageTexts = batchMessages, mobiles = batchMobiles }, ct);
+            var lineNumber = ParseLineNumber();
+            LogOutgoingRequest(lineNumber, batchMobiles);
+            var response = await SendWithRetryAsync(HttpMethod.Post, "send/likeToLike", new { lineNumber, messageTexts = batchMessages, mobiles = batchMobiles }, ct);
             all.AddRange(ToSendResult(batchMobiles, response).Items);
         }
         return new SmsSendResult(all);
@@ -164,6 +170,23 @@ public sealed class SmsIrProvider : ISmsProvider
             MaskLast4(normalized));
 
         throw new InvalidOperationException("SMS.ir LineNumber must be a numeric sender line number.");
+    }
+
+    private void LogOutgoingRequest(long lineNumber, IEnumerable<string> mobiles)
+    {
+        var mobileList = string.Join(",", mobiles.Select(MaskMobile));
+        _logger.LogInformation(
+            "SMS.ir OUTGOING send/bulk: LineNumber={LineNumber}, LineNumberLength={LineNumberLength}, LineNumberDigits={LineNumberDigits}, Mobiles={Mobiles}",
+            lineNumber,
+            lineNumber.ToString(CultureInfo.InvariantCulture).Length,
+            lineNumber.ToString(CultureInfo.InvariantCulture),
+            mobileList);
+    }
+
+    private static string MaskMobile(string value)
+    {
+        var normalized = NormalizeDigits(value).Trim();
+        return normalized.Length <= 4 ? "***" : $"{normalized[..Math.Min(4, normalized.Length)]}***{normalized[^2..]}";
     }
 
     private static string NormalizeLineNumber(string value)
