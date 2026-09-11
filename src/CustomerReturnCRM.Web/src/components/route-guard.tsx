@@ -9,7 +9,7 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
   const { auth, isReady } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
-  const isPublic = pathname === "/login" || pathname === "/register";
+  const isPublic = pathname === "/login" || pathname === "/register" || pathname.startsWith("/b/") || pathname.startsWith("/a/");
   const isSetup = pathname === "/setup";
 
   useEffect(() => {
@@ -20,12 +20,12 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (auth && isPublic) {
+    if (auth && isPublic && (pathname === "/login" || pathname === "/register")) {
       router.replace(auth.businesses.length > 0 ? "/dashboard" : "/setup");
       return;
     }
 
-    if (auth && auth.businesses.length === 0 && !isSetup) {
+    if (auth && auth.businesses.length === 0 && !isSetup && !isPublic) {
       router.replace("/setup");
       return;
     }
@@ -33,13 +33,13 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
     if (auth && auth.businesses.length > 0 && isSetup) {
       router.replace("/dashboard");
     }
-  }, [auth, isPublic, isSetup, isReady, router]);
+  }, [auth, isPublic, isSetup, isReady, pathname, router]);
 
   if (
     !isReady ||
     (!auth && !isPublic) ||
-    (auth && isPublic) ||
-    (auth && auth.businesses.length === 0 && !isSetup) ||
+    (auth && (pathname === "/login" || pathname === "/register")) ||
+    (auth && auth.businesses.length === 0 && !isSetup && !isPublic) ||
     (auth && auth.businesses.length > 0 && isSetup)
   ) {
     return <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">در حال بارگذاری...</div>;
