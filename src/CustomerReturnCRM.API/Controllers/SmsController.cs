@@ -2,8 +2,10 @@ using System.Security.Claims;
 using CustomerReturnCRM.Application.Common;
 using CustomerReturnCRM.Application.Sms;
 using CustomerReturnCRM.Domain.Entities;
+using CustomerReturnCRM.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace CustomerReturnCRM.API.Controllers;
 
@@ -78,6 +80,31 @@ public sealed class SmsController : ControllerBase
         try { var result = await service.CancelCampaignAsync(businessId, campaignId, userId, cancellationToken); return result is null ? NotFound() : Ok(result); }
         catch (InvalidOperationException exception) { return Conflict(new { error = exception.Message }); }
         catch (UnauthorizedAccessException) { return Forbid(); }
+    }
+
+    [HttpGet("debug-config")]
+    public async Task<ActionResult> GetDebugConfig(Guid businessId, [FromServices] ApplicationDbContext dbContext, [FromServices] IConfiguration configuration, CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        if (!await dbContext.BusinessMembers.AnyAsync(x => x.BusinessId == businessId && x.UserId == userId, cancellationToken)) return Forbid();
+
+        var apiKey = configuration["SMSApiKey"] ?? configuration["Sms:SmsIr:ApiKey"] ?? string.Empty;
+        var lineNumber = configuration["SMSLineNumber"] ?? configuration["Sms:SmsIr:LineNumber"] ?? string.Empty;
+        var provider = configuration["Sms:Provider"] ?? string.Empty;
+
+        return Ok(new
+        {
+            provider,
+            apiKey = Mask(apiKey),
+            lineNumber = Mask(lineNumber)
+        });
+    }
+
+    private static string Mask(string value)
+    {
+        if (string.IsNullOrEmpty(value)) return "(empty)";
+        if (value.Length <= 4) return new string('*', value.Length);
+        return $"{value[..2]}{new string('*', value.Length - 4)}{value[^2..]}";
     }
 
     private bool TryGetUserId(out Guid userId) => Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub"), out userId);
