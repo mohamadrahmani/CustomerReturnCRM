@@ -110,10 +110,12 @@ public sealed class SmsSendingBackgroundService : BackgroundService
         catch (Exception exception)
         {
             _logger.LogError(exception, "SMS campaign {CampaignId} failed while sending.", campaign.Id);
+            var failureReason = exception.Message;
+            if (string.IsNullOrWhiteSpace(failureReason)) failureReason = "SMS sending failed unexpectedly. Check application logs for details.";
             foreach (var recipient in campaign.Recipients.Where(x => x.Status == SmsRecipientStatus.Pending))
             {
                 recipient.Status = SmsRecipientStatus.Failed;
-                recipient.FailureReason = "SMS sending failed unexpectedly. Check application logs for details.";
+                recipient.FailureReason = failureReason;
                 recipient.UpdatedAt = _timeProvider.GetUtcNow().UtcDateTime;
             }
             campaign.Status = campaign.Recipients.Any(x => x.Status == SmsRecipientStatus.Submitted || x.Status == SmsRecipientStatus.Delivered) ? SmsCampaignStatus.PartiallyFailed : SmsCampaignStatus.Failed;
