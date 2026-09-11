@@ -57,6 +57,7 @@ public static class DependencyInjection
         services.AddScoped<ISmsManagementService, SmsManagementService>();
         services.AddScoped<IAvailabilityManagementService, AvailabilityManagementService>();
         services.AddScoped<IPublicBookingService, PublicBookingService>();
+        services.AddScoped<ISmsService, SmsService>();
         services.AddHttpClient(nameof(SmsIrProvider), client => client.Timeout = TimeSpan.FromSeconds(configuration.GetValue<int?>("Sms:SmsIr:TimeoutSeconds") ?? 30));
         services.AddSingleton<ISmsProvider, LoggingSmsProvider>();
         services.AddSingleton<ISmsProvider, SmsIrProvider>();
