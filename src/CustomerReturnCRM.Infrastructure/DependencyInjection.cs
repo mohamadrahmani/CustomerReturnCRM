@@ -58,6 +58,7 @@ public static class DependencyInjection
         services.AddScoped<IAvailabilityManagementService, AvailabilityManagementService>();
         services.AddScoped<IPublicBookingService, PublicBookingService>();
         services.AddSingleton<ISmsProvider, LoggingSmsProvider>();
+        services.AddSingleton<ISmsProviderResolver, SmsProviderResolver>();
         services.AddHostedService<SmsSendingBackgroundService>();
         services.AddSingleton(TimeProvider.System);
         services.Configure<ReturnAnalysisOptions>(options =>
