@@ -146,11 +146,11 @@ public sealed class SmsIrProvider : ISmsProvider
         return new SmsSendResult(mobiles.Select(m => new SmsSendItemResult(m, accepted, messageId, packId, null, errorCode, errorMessage)).ToArray());
     }
 
-    private int ParseLineNumber()
+    private long ParseLineNumber()
     {
         var normalized = NormalizeDigits(_lineNumber).Trim();
-        if (int.TryParse(normalized, out var value)) return value;
-        throw new InvalidOperationException("SMS.ir LineNumber must be numeric. Use the numeric sender line from your SMS.ir account (for example 3000xxxxxx), without +, spaces, or hyphens.");
+        if (long.TryParse(normalized, out var value) && value > 0) return value;
+        throw new InvalidOperationException("SMS.ir LineNumber must be a numeric sender line number.");
     }
 
     private static string NormalizeDigits(string value)
