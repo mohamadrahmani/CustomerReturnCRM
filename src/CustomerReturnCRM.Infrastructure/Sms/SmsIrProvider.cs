@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -24,6 +25,12 @@ public sealed class SmsIrProvider : ISmsProvider
         _logger = logger;
         _apiKey = configuration["SMSApiKey"] ?? configuration["Sms:SmsIr:ApiKey"] ?? string.Empty;
         _lineNumber = configuration["SMSLineNumber"] ?? configuration["Sms:SmsIr:LineNumber"] ?? string.Empty;
+
+        _logger.LogInformation(
+            "SMS.ir configuration loaded. ApiKeyConfigured={ApiKeyConfigured}, LineNumberLength={LineNumberLength}, LineNumberLast4={LineNumberLast4}",
+            !string.IsNullOrWhiteSpace(_apiKey),
+            NormalizeLineNumber(_lineNumber).Length,
+            MaskLast4(_lineNumber));
     }
 
     public async Task<IReadOnlyCollection<SmsProviderResult>> SendAsync(IReadOnlyCollection<SmsProviderMessage> messages, CancellationToken cancellationToken = default)
@@ -148,9 +155,27 @@ public sealed class SmsIrProvider : ISmsProvider
 
     private long ParseLineNumber()
     {
-        var normalized = NormalizeDigits(_lineNumber).Trim();
-        if (long.TryParse(normalized, out var value) && value > 0) return value;
+        var normalized = NormalizeLineNumber(_lineNumber);
+        if (long.TryParse(normalized, NumberStyles.None, CultureInfo.InvariantCulture, out var value) && value > 0) return value;
+
+        _logger.LogError(
+            "SMS.ir sender line number is invalid. Length={Length}, Last4={Last4}",
+            normalized.Length,
+            MaskLast4(normalized));
+
         throw new InvalidOperationException("SMS.ir LineNumber must be a numeric sender line number.");
+    }
+
+    private static string NormalizeLineNumber(string value)
+    {
+        var normalized = NormalizeDigits(value).Trim();
+        return new string(normalized.Where(c => !char.IsWhiteSpace(c) && !char.GetUnicodeCategory(c).Equals(UnicodeCategory.Format)).ToArray());
+    }
+
+    private static string MaskLast4(string value)
+    {
+        var normalized = NormalizeLineNumber(value);
+        return normalized.Length <= 4 ? normalized : $"***{normalized[^4..]}";
     }
 
     private static string NormalizeDigits(string value)
