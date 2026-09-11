@@ -22,8 +22,8 @@ public sealed class SmsIrProvider : ISmsProvider
         _httpClient = httpClientFactory.CreateClient(nameof(SmsIrProvider));
         _httpClient.BaseAddress = new Uri(BaseUrl);
         _logger = logger;
-        _apiKey = configuration["Sms:SmsIr:ApiKey"] ?? string.Empty;
-        _lineNumber = configuration["Sms:SmsIr:LineNumber"] ?? string.Empty;
+        _apiKey = configuration["SMSApiKey"] ?? string.Empty;
+        _lineNumber = configuration["SMSLineNumber"] ?? string.Empty;
     }
 
     public async Task<IReadOnlyCollection<SmsProviderResult>> SendAsync(IReadOnlyCollection<SmsProviderMessage> messages, CancellationToken cancellationToken = default)
@@ -45,28 +45,28 @@ public sealed class SmsIrProvider : ISmsProvider
     public async Task<SmsSendResult> SendAsync(SmsSendRequest request, CancellationToken ct = default)
     {
         if (request.Mobiles.Count == 0) return new SmsSendResult(Array.Empty<SmsSendItemResult>());
-        if (request.Mobiles.Count > 100)
+        var all = new List<SmsSendItemResult>();
+        foreach (var batch in request.Mobiles.Chunk(100))
         {
-            var all = new List<SmsSendItemResult>();
-            foreach (var batch in request.Mobiles.Chunk(100))
-                all.AddRange((await SendAsync(new SmsSendRequest(batch, request.Message, request.MessageType), ct)).Items);
-            return new SmsSendResult(all);
+            var response = await SendWithRetryAsync(HttpMethod.Post, "send/bulk", new { lineNumber = ParseLineNumber(), messageText = request.Message, mobiles = batch.ToArray() }, ct);
+            all.AddRange(ToSendResult(batch.ToArray(), response).Items);
         }
-        var response = await SendWithRetryAsync(HttpMethod.Post, "send/bulk", new { lineNumber = ParseLineNumber(), messageText = request.Message, mobiles = request.Mobiles.ToArray() }, ct);
-        return ToSendResult(request.Mobiles, response);
+        return new SmsSendResult(all);
     }
 
     public async Task<SmsSendResult> SendLikeToLikeAsync(SmsLikeToLikeRequest request, CancellationToken ct = default)
     {
         if (request.Mobiles.Count != request.Messages.Count) throw new ArgumentException("The number of mobiles and messages must be equal.");
         if (request.Mobiles.Count == 0) return new SmsSendResult(Array.Empty<SmsSendItemResult>());
+        var mobiles = request.Mobiles.ToArray();
+        var messages = request.Messages.ToArray();
         var all = new List<SmsSendItemResult>();
-        foreach (var indexes in Enumerable.Range(0, request.Mobiles.Count).Chunk(100))
+        foreach (var indexes in Enumerable.Range(0, mobiles.Length).Chunk(100))
         {
-            var mobiles = indexes.Select(i => request.Mobiles.ElementAt(i)).ToArray();
-            var messages = indexes.Select(i => request.Messages.ElementAt(i)).ToArray();
-            var response = await SendWithRetryAsync(HttpMethod.Post, "send/likeToLike", new { lineNumber = ParseLineNumber(), messageTexts = messages, mobiles }, ct);
-            all.AddRange(ToSendResult(mobiles, response).Items);
+            var batchMobiles = indexes.Select(i => mobiles[i]).ToArray();
+            var batchMessages = indexes.Select(i => messages[i]).ToArray();
+            var response = await SendWithRetryAsync(HttpMethod.Post, "send/likeToLike", new { lineNumber = ParseLineNumber(), messageTexts = batchMessages, mobiles = batchMobiles }, ct);
+            all.AddRange(ToSendResult(batchMobiles, response).Items);
         }
         return new SmsSendResult(all);
     }
@@ -89,6 +89,7 @@ public sealed class SmsIrProvider : ISmsProvider
     public async Task<SmsCreditResult> GetCreditAsync(CancellationToken ct = default)
     {
         var response = await SendWithRetryAsync(HttpMethod.Get, "credit", null, ct);
+        if (!IsSuccess(response.StatusCode)) throw new InvalidOperationException(BuildError(response));
         var credit = ExtractDecimal(response.Json, "credit", "data");
         return new SmsCreditResult(credit ?? 0m);
     }
@@ -109,7 +110,8 @@ public sealed class SmsIrProvider : ISmsProvider
     private async Task<ProviderResponse> SendWithRetryAsync(HttpMethod method, string endpoint, object? body, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(_apiKey)) throw new InvalidOperationException("SMS.ir API Key is not configured.");
-        if (string.IsNullOrWhiteSpace(_lineNumber) && endpoint is "send/bulk" or "send/likeToLike") throw new InvalidOperationException("SMS.ir line number is not configured.");
+        if (string.IsNullOrWhiteSpace(_lineNumber) && (endpoint == "send/bulk" || endpoint == "send/likeToLike")) throw new InvalidOperationException("SMS.ir line number is not configured.");
+
         Exception? last = null;
         for (var attempt = 0; attempt < 3; attempt++)
         {
@@ -123,11 +125,11 @@ public sealed class SmsIrProvider : ISmsProvider
                 if (!ShouldRetry(response.StatusCode)) return new ProviderResponse(response.StatusCode, json);
                 last = new HttpRequestException($"SMS.ir returned HTTP {(int)response.StatusCode}.");
             }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !ct.IsCancellationRequested)
+            catch (Exception ex) when ((ex is HttpRequestException || ex is TaskCanceledException) && !ct.IsCancellationRequested)
             {
                 last = ex;
             }
-            await Task.Delay(TimeSpan.FromSeconds(attempt == 0 ? 2 : attempt == 1 ? 5 : 15), ct);
+            if (attempt < 2) await Task.Delay(TimeSpan.FromSeconds(attempt == 0 ? 2 : 5), ct);
         }
         throw new InvalidOperationException("SMS.ir request failed after retries.", last);
     }
