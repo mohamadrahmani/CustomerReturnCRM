@@ -146,8 +146,23 @@ public sealed class SmsIrProvider : ISmsProvider
         return new SmsSendResult(mobiles.Select(m => new SmsSendItemResult(m, accepted, messageId, packId, null, errorCode, errorMessage)).ToArray());
     }
 
-    private int ParseLineNumber() => int.TryParse(_lineNumber, out var value) ? value : throw new InvalidOperationException("SMS.ir LineNumber must be numeric.");
-    private static int ParsePatternId(string value) => int.TryParse(value, out var id) ? id : throw new ArgumentException("SMS.ir PatternId must be numeric.");
+    private int ParseLineNumber()
+    {
+        var normalized = NormalizeDigits(_lineNumber).Trim();
+        if (int.TryParse(normalized, out var value)) return value;
+        throw new InvalidOperationException("SMS.ir LineNumber must be numeric. Use the numeric sender line from your SMS.ir account (for example 3000xxxxxx), without +, spaces, or hyphens.");
+    }
+
+    private static string NormalizeDigits(string value)
+    {
+        return value
+            .Replace('۰', '0').Replace('۱', '1').Replace('۲', '2').Replace('۳', '3').Replace('۴', '4')
+            .Replace('۵', '5').Replace('۶', '6').Replace('۷', '7').Replace('۸', '8').Replace('۹', '9')
+            .Replace('٠', '0').Replace('١', '1').Replace('٢', '2').Replace('٣', '3').Replace('٤', '4')
+            .Replace('٥', '5').Replace('٦', '6').Replace('٧', '7').Replace('٨', '8').Replace('٩', '9');
+    }
+
+    private static int ParsePatternId(string value) => int.TryParse(NormalizeDigits(value).Trim(), out var id) ? id : throw new ArgumentException("SMS.ir PatternId must be numeric.");
     private static bool IsSuccess(HttpStatusCode code) => (int)code is >= 200 and < 300;
     private static bool ShouldRetry(HttpStatusCode code) => code == HttpStatusCode.TooManyRequests || (int)code >= 500;
     private static string BuildError(ProviderResponse response) => ExtractString(response.Json, "message", "errorMessage", "error") ?? (!string.IsNullOrWhiteSpace(response.RawBody) ? Truncate(response.RawBody, 500) : $"SMS.ir request failed with HTTP {(int)response.StatusCode}.");
