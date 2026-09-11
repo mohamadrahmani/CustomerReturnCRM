@@ -5,6 +5,7 @@ public sealed record SmsProviderResult(Guid RecipientId, bool Accepted, string? 
 
 public enum SmsProviderType
 {
+    Development = 0,
     SmsIr = 1
 }
 
