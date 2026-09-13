@@ -1,7 +1,10 @@
 using CustomerReturnCRM.Domain.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace CustomerReturnCRM.Domain.Entities;
 
+[Index(nameof(TokenHash), IsUnique = true)]
+[Index(nameof(BusinessId), nameof(CustomerId), nameof(ExpiresAtUtc))]
 public sealed class BaleConnectToken : AuditableEntity
 {
     public Guid BusinessId { get; set; }
