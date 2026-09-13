@@ -1,7 +1,10 @@
 using CustomerReturnCRM.Domain.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace CustomerReturnCRM.Domain.Entities;
 
+[Index(nameof(BusinessId), nameof(CustomerId), IsUnique = true)]
+[Index(nameof(BusinessId), nameof(BaleUserId), IsUnique = true)]
 public sealed class BaleCustomerIdentity : AuditableEntity
 {
     public Guid BusinessId { get; set; }
