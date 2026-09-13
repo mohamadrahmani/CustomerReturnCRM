@@ -1,4 +1,7 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using CustomerReturnCRM.Application.Bale;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -35,7 +38,7 @@ public sealed class BaleController : ControllerBase
     [HttpPost("webhook")]
     [AllowAnonymous]
     public async Task<IActionResult> Webhook(
-        [FromBody] object update,
+        [FromBody] JsonElement update,
         [FromServices] IBaleService baleService,
         [FromServices] IConfiguration configuration,
         CancellationToken cancellationToken)
@@ -43,15 +46,14 @@ public sealed class BaleController : ControllerBase
         var expectedSecret = configuration["Bale:WebhookSecret"];
         if (!string.IsNullOrWhiteSpace(expectedSecret))
         {
-            var suppliedSecret = Request.Headers["X-Bot-Api-Secret-Token"].FirstOrDefault();
-            if (!CryptographicOperations.FixedTimeEquals(
-                    System.Text.Encoding.UTF8.GetBytes(expectedSecret),
-                    System.Text.Encoding.UTF8.GetBytes(suppliedSecret ?? string.Empty)))
+            var suppliedSecret = Request.Headers["X-Bot-Api-Secret-Token"].FirstOrDefault() ?? string.Empty;
+            var expectedBytes = Encoding.UTF8.GetBytes(expectedSecret);
+            var suppliedBytes = Encoding.UTF8.GetBytes(suppliedSecret);
+            if (expectedBytes.Length != suppliedBytes.Length || !CryptographicOperations.FixedTimeEquals(expectedBytes, suppliedBytes))
                 return Unauthorized();
         }
 
-        var json = System.Text.Json.JsonSerializer.Serialize(update);
-        await baleService.HandleUpdateAsync(json, cancellationToken);
+        await baleService.HandleUpdateAsync(update.GetRawText(), cancellationToken);
         return Ok();
     }
 }
