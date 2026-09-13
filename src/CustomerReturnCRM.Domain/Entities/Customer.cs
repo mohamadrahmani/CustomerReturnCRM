@@ -12,4 +12,6 @@ public sealed class Customer : AuditableEntity
     public string? Note { get; set; }
     public bool IsActive { get; set; } = true;
     public Business Business { get; set; } = null!;
+    public ICollection<BaleCustomerIdentity> BaleIdentities { get; set; } = new List<BaleCustomerIdentity>();
+    public ICollection<BaleConnectToken> BaleConnectTokens { get; set; } = new List<BaleConnectToken>();
 }
