@@ -9,8 +9,14 @@ public sealed record PublicBusinessProfileResult(
     string? City,
     string? Description,
     string PublicSlug,
+    IReadOnlyList<PublicWorkingHourResult> WorkingHours,
     IReadOnlyList<PublicServiceResult> Services,
     IReadOnlyList<PublicStaffResult> Staff);
+
+public sealed record PublicWorkingHourResult(
+    DayOfWeek DayOfWeek,
+    TimeSpan StartTime,
+    TimeSpan EndTime);
 
 public sealed record PublicServiceResult(
     Guid Id,
