@@ -26,6 +26,7 @@ public sealed class PublicBookingService : IPublicBookingService
     {
         var business = await _db.Businesses.AsNoTracking()
             .Include(x => x.Staff)
+            .Include(x => x.WorkingHours)
             .SingleOrDefaultAsync(x => x.PublicSlug == slug.Trim() && x.IsActive && x.PublicBookingEnabled, cancellationToken);
 
         if (business is null) return null;
@@ -41,8 +42,13 @@ public sealed class PublicBookingService : IPublicBookingService
             .Select(x => new PublicStaffResult(x.Id, x.FirstName, x.LastName))
             .ToList();
 
+        var workingHours = business.WorkingHours
+            .OrderBy(x => x.DayOfWeek)
+            .Select(x => new PublicWorkingHourResult(x.DayOfWeek, x.StartTime, x.EndTime))
+            .ToList();
+
         return new PublicBusinessProfileResult(business.Id, business.Name, business.BusinessType, business.Mobile,
-            business.Address, business.City, business.Description, business.PublicSlug, services, staff);
+            business.Address, business.City, business.Description, business.PublicSlug!, workingHours, services, staff);
     }
 
     public async Task<PublicBookingResult> BookAsync(string slug, PublicBookingRequest request, CancellationToken cancellationToken = default)
@@ -102,8 +108,6 @@ public sealed class PublicBookingService : IPublicBookingService
         {
             throw new InvalidOperationException("This customer record is inactive. Please contact the business.");
         }
-        // An existing CRM customer is intentionally not overwritten by public booking input.
-        // The mobile number identifies the CRM record; the customer remains the source of truth for identity data.
 
         var publicCode = await CreateUniqueCodeAsync(cancellationToken);
         var appointment = new Appointment
