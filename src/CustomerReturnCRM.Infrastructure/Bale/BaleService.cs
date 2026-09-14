@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using CustomerReturnCRM.Application.Bale;
+using CustomerReturnCRM.Application.Sms;
 using CustomerReturnCRM.Domain.Entities;
 using CustomerReturnCRM.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -15,12 +16,14 @@ public sealed class BaleService : IBaleService
     private readonly ApplicationDbContext _db;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
+    private readonly ISmsService _smsService;
 
-    public BaleService(ApplicationDbContext db, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public BaleService(ApplicationDbContext db, IHttpClientFactory httpClientFactory, IConfiguration configuration, ISmsService smsService)
     {
         _db = db;
         _httpClientFactory = httpClientFactory;
         _configuration = configuration;
+        _smsService = smsService;
     }
 
     public async Task<BaleConnectInviteResult?> CreateConnectInviteAsync(Guid businessId, Guid customerId, Guid userId, CancellationToken cancellationToken = default)
@@ -44,6 +47,35 @@ public sealed class BaleService : IBaleService
         await _db.SaveChangesAsync(cancellationToken);
 
         return new BaleConnectInviteResult(customerId, BuildConnectUrl(botUsername, rawToken), createdAt.AddMinutes(15));
+    }
+
+    public async Task<BaleConnectSmsResult?> CreateConnectInviteAndSendSmsAsync(Guid businessId, Guid customerId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        var customer = await _db.Customers
+            .AsNoTracking()
+            .Where(x => x.Id == customerId && x.BusinessId == businessId && x.IsActive)
+            .Select(x => new { x.Id, x.FirstName, x.Mobile })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (customer is null || string.IsNullOrWhiteSpace(customer.Mobile)) return null;
+
+        var invite = await CreateConnectInviteAsync(businessId, customerId, userId, cancellationToken);
+        if (invite is null) return null;
+
+        var message = $"{customer.FirstName} عزیز\nبرای دریافت یادآوری‌های نوبت و زمان مناسب مراجعه در بله، روی لینک زیر بزنید و Start را انتخاب کنید:\n{invite.ConnectUrl}";
+        try
+        {
+            var result = await _smsService.SendAsync(new SmsSendRequest(
+                new[] { customer.Mobile },
+                message,
+                SmsMessageType.Reminder), cancellationToken);
+            var item = result.Items.FirstOrDefault();
+            return new BaleConnectSmsResult(invite, item?.Accepted == true, item?.ErrorMessage);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            return new BaleConnectSmsResult(invite, false, exception.Message);
+        }
     }
 
     public async Task<bool> HandleUpdateAsync(string updateJson, CancellationToken cancellationToken = default)
