@@ -35,6 +35,28 @@ public sealed class BaleController : ControllerBase
         }
     }
 
+    [HttpPost("businesses/{businessId:guid}/customers/{customerId:guid}/connect-and-sms")]
+    [Authorize]
+    public async Task<ActionResult<BaleConnectSmsResult>> CreateConnectInviteAndSendSms(
+        Guid businessId,
+        Guid customerId,
+        [FromServices] IBaleService baleService,
+        CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+        if (!Guid.TryParse(userIdClaim, out var userId)) return Unauthorized();
+
+        try
+        {
+            var result = await baleService.CreateConnectInviteAndSendSmsAsync(businessId, customerId, userId, cancellationToken);
+            return result is null ? BadRequest(new { detail = "مشتری پیدا نشد یا شماره موبایل مشتری ثبت نشده است." }) : Ok(result);
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Problem(statusCode: StatusCodes.Status503ServiceUnavailable, detail: exception.Message);
+        }
+    }
+
     [HttpPost("webhook")]
     [AllowAnonymous]
     public async Task<IActionResult> Webhook(
