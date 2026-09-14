@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/dotnet/sdk:9.0
+
+WORKDIR /src
+
+RUN dotnet tool install --global dotnet-ef --version 9.*
+
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+COPY CustomerReturnCRM.sln .
+
+COPY src/CustomerReturnCRM.Domain/CustomerReturnCRM.Domain.csproj src/CustomerReturnCRM.Domain/
+COPY src/CustomerReturnCRM.Application/CustomerReturnCRM.Application.csproj src/CustomerReturnCRM.Application/
+COPY src/CustomerReturnCRM.Infrastructure/CustomerReturnCRM.Infrastructure.csproj src/CustomerReturnCRM.Infrastructure/
+COPY src/CustomerReturnCRM.API/CustomerReturnCRM.API.csproj src/CustomerReturnCRM.API/
+
+RUN dotnet restore CustomerReturnCRM.sln
+
+COPY src/ src/
+
+ENTRYPOINT ["sh", "-c", "dotnet ef database update --project src/CustomerReturnCRM.Infrastructure --startup-project src/CustomerReturnCRM.API --connection \"$ConnectionStrings__DefaultConnection\""]

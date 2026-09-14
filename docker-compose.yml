@@ -1,0 +1,58 @@
+﻿services:
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: customerreturncrm-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "BemooniDev_12345!"
+    ports:
+      - "11433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "BemooniDev_12345!", "-C", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  migration:
+    build:
+      context: .
+      dockerfile: Docker/API/Dockerfile.migration
+    container_name: customerreturncrm-migration
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=CustomerReturnCRM;User Id=sa;Password=BemooniDev_12345!;TrustServerCertificate=True;"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: Docker/API/Dockerfile
+    container_name: customerreturncrm-api
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=CustomerReturnCRM;User Id=sa;Password=BemooniDev_12345!;TrustServerCertificate=True;"
+      Jwt__Key: "development-only-change-this-key-to-a-long-random-secret"
+    ports:
+      - "8080:8080"
+    depends_on:
+      migration:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: .
+      dockerfile: Docker/Web/Dockerfile
+    container_name: customerreturncrm-web
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: "http://localhost:8080"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  sqlserver-data:

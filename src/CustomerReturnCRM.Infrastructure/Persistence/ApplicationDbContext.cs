@@ -24,7 +24,8 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
     public DbSet<SmsTemplate> SmsTemplates => Set<SmsTemplate>();
     public DbSet<SmsCampaign> SmsCampaigns => Set<SmsCampaign>();
     public DbSet<SmsRecipient> SmsRecipients => Set<SmsRecipient>();
-
+    public DbSet<BaleConnectToken> BaleConnectTokens => Set<BaleConnectToken>();
+    public DbSet<BaleCustomerIdentity> BaleCustomerIdentities => Set<BaleCustomerIdentity>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -95,5 +96,60 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
         builder.Entity<SmsTemplate>(entity => { entity.ToTable("SmsTemplates"); entity.HasKey(x => x.Id); entity.Property(x => x.Name).HasMaxLength(200).IsRequired(); entity.Property(x => x.Content).HasMaxLength(2000).IsRequired(); entity.Property(x => x.CreatedAt).IsRequired(); entity.HasIndex(x => new { x.BusinessId, x.Name }).IsUnique(); entity.HasIndex(x => new { x.BusinessId, x.IsActive }); entity.HasOne(x => x.Business).WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict); });
         builder.Entity<SmsCampaign>(entity => { entity.ToTable("SmsCampaigns"); entity.HasKey(x => x.Id); entity.Property(x => x.Name).HasMaxLength(200); entity.Property(x => x.Message).HasMaxLength(2000).IsRequired(); entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(30).IsRequired(); entity.Property(x => x.CreatedAt).IsRequired(); entity.HasIndex(x => new { x.BusinessId, x.Status, x.ScheduledAt }); entity.HasIndex(x => new { x.BusinessId, x.CreatedByUserId }); entity.HasOne(x => x.Business).WithMany().HasForeignKey(x => x.BusinessId).OnDelete(DeleteBehavior.Restrict); entity.HasOne(x => x.Template).WithMany().HasForeignKey(x => x.TemplateId).OnDelete(DeleteBehavior.SetNull); });
         builder.Entity<SmsRecipient>(entity => { entity.ToTable("SmsRecipients"); entity.HasKey(x => x.Id); entity.Property(x => x.Mobile).HasMaxLength(30).IsRequired(); entity.Property(x => x.RenderedMessage).HasMaxLength(2000); entity.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsRequired(); entity.Property(x => x.ProviderMessageId).HasMaxLength(200); entity.Property(x => x.FailureReason).HasMaxLength(1000); entity.Property(x => x.CreatedAt).IsRequired(); entity.HasIndex(x => new { x.SmsCampaignId, x.CustomerId }).IsUnique(); entity.HasIndex(x => new { x.SmsCampaignId, x.Status }); entity.HasIndex(x => x.ProviderMessageId); entity.HasOne(x => x.SmsCampaign).WithMany(x => x.Recipients).HasForeignKey(x => x.SmsCampaignId).OnDelete(DeleteBehavior.Cascade); entity.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict); });
-    }
+    builder.Entity<BaleConnectToken>(entity =>
+{
+    entity.ToTable("BaleConnectToken");
+    entity.HasKey(x => x.Id);
+
+    entity.HasIndex(x => x.TokenHash)
+        .IsUnique();
+
+    entity.HasIndex(x => new
+    {
+        x.BusinessId,
+        x.CustomerId,
+        x.ExpiresAtUtc
+    });
+
+    entity.HasOne(x => x.Business)
+        .WithMany()
+        .HasForeignKey(x => x.BusinessId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    entity.HasOne(x => x.Customer)
+        .WithMany(x => x.BaleConnectTokens)
+        .HasForeignKey(x => x.CustomerId)
+        .OnDelete(DeleteBehavior.Cascade);
+});
+
+builder.Entity<BaleCustomerIdentity>(entity =>
+{
+    entity.ToTable("BaleCustomerIdentity");
+    entity.HasKey(x => x.Id);
+
+    entity.HasIndex(x => new
+    {
+        x.BusinessId,
+        x.CustomerId
+    })
+    .IsUnique();
+
+    entity.HasIndex(x => new
+    {
+        x.BusinessId,
+        x.BaleUserId
+    })
+    .IsUnique();
+
+    entity.HasOne(x => x.Business)
+        .WithMany()
+        .HasForeignKey(x => x.BusinessId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    entity.HasOne(x => x.Customer)
+        .WithMany(x => x.BaleIdentities)
+        .HasForeignKey(x => x.CustomerId)
+        .OnDelete(DeleteBehavior.Cascade);
+});
+     }
 }
