@@ -5,6 +5,7 @@ import Link from "next/link";
 const sections = [
   { href: "/settings/working-hours", title: "ساعات کاری", description: "تعیین روزهای کاری و ساعت شروع و پایان فعالیت کسب‌وکار برای محاسبه زمان‌های رزرو.", icon: "◷" },
   { href: "/settings/sms", title: "پیامک", description: "مدیریت قالب‌ها و مشاهده تاریخچه ارسال پیامک.", icon: "✉" },
+  { href: "/settings/bale", title: "بله", description: "اتصال مشتریان به بله و ساخت لینک فعال‌سازی یک‌بارمصرف برای دریافت یادآوری‌ها.", icon: "✈" },
 ];
 
 export default function SettingsPage() {
