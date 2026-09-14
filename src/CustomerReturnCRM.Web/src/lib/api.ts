@@ -69,6 +69,7 @@ export async function getDismissedSmartLists(businessId: string, page = 1, pageS
 export async function restoreSmartListItem(businessId: string, item: { smartListType: string; customerId: string; serviceId: string | null }) { return apiFetch<void>(`/api/businesses/${businessId}/smart-lists/restore`, { method: "POST", body: JSON.stringify(item) }); }
 export async function createBaleConnectInvite(businessId: string, customerId: string) { return apiFetch<BaleConnectInviteResult>(`/api/bale/businesses/${businessId}/customers/${customerId}/connect`, { method: "POST" }); }
 export async function connectBaleCustomerAndSendSms(businessId: string, customerId: string) { return apiFetch<BaleConnectSmsResult>(`/api/bale/businesses/${businessId}/customers/${customerId}/connect-and-sms`, { method: "POST" }); }
+export const createBaleConnectInviteAndSendSms = connectBaleCustomerAndSendSms;
 
 export type SmsTemplate = { id: string; businessId: string; name: string; content: string; isActive: boolean; createdAt: string; updatedAt: string | null };
 export type SmsRecipient = { id: string; customerId: string; customerName: string; mobile: string; renderedMessage: string | null; status: SmsRecipientStatus; providerMessageId: string | null; submittedAt: string | null; deliveredAt: string | null; failureReason: string | null };
