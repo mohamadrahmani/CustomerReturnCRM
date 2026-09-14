@@ -29,7 +29,7 @@ export type AuthenticationResult = { userId: string; email: string; token: strin
 export type BusinessSetupRequest = { name: string; businessType: string; mobile: string; address?: string; city?: string; firstName: string; lastName: string; staffMobile?: string; serviceTemplateId?: string };
 export type BusinessSetupResult = { businessId: string; membershipId: string; staffId: string; serviceId: string | null };
 export type DashboardAppointment = { id: string; customerId: string; customerName: string; startAt: string; endAt: string; status: number; services: string[] };
-export type DashboardReminder = { id: string; customerId: string; serviceId: string | null; title: string; dueAt: string; status: number };
+export type DashboardReminder = { id: string; customerId: string; customerName: string; serviceId: string | null; title: string; dueAt: string; status: number };
 export type DashboardSmartListItem = { customerId: string; customerName: string; mobile: string; serviceId: string | null; serviceTitle: string | null; lastVisitAt: string; expectedReturnDate: string | null; daysFromExpectedReturn: number | null; smartListType: string };
 export type DashboardVisit = { id: string; customerId: string; customerName: string; visitAt: string; totalAmount: number | null };
 export type DashboardResult = { date: string; activeCustomerCount: number; todayAppointments: DashboardAppointment[]; pendingReminders: DashboardReminder[]; dueSoon: DashboardSmartListItem[]; overdue: DashboardSmartListItem[]; atRisk: DashboardSmartListItem[]; noRecentVisit: DashboardSmartListItem[]; recentVisits: DashboardVisit[] };
@@ -68,7 +68,7 @@ export async function updateStaff(businessId: string, staffId: string, request: 
 export async function getDismissedSmartLists(businessId: string, page = 1, pageSize = 15) { return apiFetch<PagedResult<DashboardSmartListItem>>(`/api/businesses/${businessId}/smart-lists/dismissed?page=${page}&pageSize=${pageSize}`); }
 export async function restoreSmartListItem(businessId: string, item: { smartListType: string; customerId: string; serviceId: string | null }) { return apiFetch<void>(`/api/businesses/${businessId}/smart-lists/restore`, { method: "POST", body: JSON.stringify(item) }); }
 export async function createBaleConnectInvite(businessId: string, customerId: string) { return apiFetch<BaleConnectInviteResult>(`/api/bale/businesses/${businessId}/customers/${customerId}/connect`, { method: "POST" }); }
-export async function createBaleConnectInviteAndSendSms(businessId: string, customerId: string) { return apiFetch<BaleConnectSmsResult>(`/api/bale/businesses/${businessId}/customers/${customerId}/connect-and-sms`, { method: "POST" }); }
+export async function connectBaleCustomerAndSendSms(businessId: string, customerId: string) { return apiFetch<BaleConnectSmsResult>(`/api/bale/businesses/${businessId}/customers/${customerId}/connect-and-sms`, { method: "POST" }); }
 
 export type SmsTemplate = { id: string; businessId: string; name: string; content: string; isActive: boolean; createdAt: string; updatedAt: string | null };
 export type SmsRecipient = { id: string; customerId: string; customerName: string; mobile: string; renderedMessage: string | null; status: SmsRecipientStatus; providerMessageId: string | null; submittedAt: string | null; deliveredAt: string | null; failureReason: string | null };
