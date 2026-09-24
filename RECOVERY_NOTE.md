@@ -1,0 +1,1 @@
+Temporary recovery marker: VisitManagementService was accidentally overwritten during branch preparation. Restore this file from main before continuing implementation.
