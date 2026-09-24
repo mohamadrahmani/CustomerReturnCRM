@@ -25,30 +25,8 @@ public sealed class CompleteAppointmentRequest
     public string? Note { get; init; }
 }
 
-public sealed record VisitServiceResult(
-    Guid Id,
-    Guid ServiceId,
-    Guid StaffId,
-    string ServiceTitle,
-    decimal Price,
-    int DurationMinutes,
-    int? SuggestedReturnDays,
-    string StaffName,
-    string? StaffMobile);
-
-public sealed record VisitResult(
-    Guid Id,
-    Guid BusinessId,
-    Guid CustomerId,
-    string CustomerName,
-    string? CustomerMobile,
-    Guid? AppointmentId,
-    DateTime VisitAt,
-    decimal? TotalAmount,
-    string? Note,
-    DateTime CreatedAt,
-    DateTime? UpdatedAt,
-    IReadOnlyList<VisitServiceResult> Services);
+public sealed record VisitServiceResult(Guid Id, Guid ServiceId, Guid StaffId, string ServiceTitle, decimal Price, int DurationMinutes, int? SuggestedReturnDays, string StaffName, string? StaffMobile);
+public sealed record VisitResult(Guid Id, Guid BusinessId, Guid CustomerId, string CustomerName, string? CustomerMobile, Guid? AppointmentId, DateTime VisitAt, decimal? TotalAmount, string? Note, DateTime CreatedAt, DateTime? UpdatedAt, IReadOnlyList<VisitServiceResult> Services);
 
 public interface IVisitManagementService
 {
@@ -56,4 +34,5 @@ public interface IVisitManagementService
     Task<PagedResult<VisitResult>> ListAsync(Guid businessId, Guid userId, DateTime? from, DateTime? to, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default);
     Task<VisitResult?> GetAsync(Guid businessId, Guid visitId, Guid userId, CancellationToken cancellationToken = default);
     Task<VisitResult?> CompleteAppointmentAsync(Guid businessId, Guid appointmentId, Guid userId, CompleteAppointmentRequest request, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid businessId, Guid visitId, Guid userId, CancellationToken cancellationToken = default);
 }
