@@ -2,6 +2,7 @@ import { readAuth } from "./auth";
 import type { SmsCampaignStatus, SmsRecipientStatus } from "./sms";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5108";
+export const PUBLIC_APP_BASE_URL = (process.env.NEXT_PUBLIC_PUBLIC_APP_BASE_URL ?? (typeof window !== "undefined" ? window.location.origin : "")).replace(/\/$/, "");
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const auth = readAuth();
