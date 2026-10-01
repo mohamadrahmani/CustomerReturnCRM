@@ -12,7 +12,7 @@ public sealed class LoginRequest
     public string Password { get; init; } = null!;
 }
 
-public sealed record AuthenticationBusinessResult(Guid Id, string Name, string Role);
+public sealed record AuthenticationBusinessResult(Guid Id, string Name, string Role, string? PublicSlug);
 
 public sealed record AuthenticationResult(
     Guid UserId,
