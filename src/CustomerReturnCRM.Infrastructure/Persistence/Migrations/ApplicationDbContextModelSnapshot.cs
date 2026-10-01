@@ -999,6 +999,9 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("PasswordResetOtpRequestedAtUtc")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("PasswordResetOtpAttemptCount")
+                        .HasColumnType("int");
+
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
