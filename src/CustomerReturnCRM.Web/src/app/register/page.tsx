@@ -7,7 +7,7 @@ import { useAuth } from "@/components/auth-provider";
 
 export default function RegisterPage() {
   const { setAuth } = useAuth();
-  const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -24,7 +24,7 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const result = await register(email.trim(), password);
+      const result = await register(mobile.trim(), password);
       setAuth(result);
       window.location.href = result.businesses.length > 0 ? "/dashboard" : "/setup";
     } catch (err) {
@@ -43,12 +43,13 @@ export default function RegisterPage() {
           <p className="mt-2 text-sm leading-6 text-slate-500">حساب خود را بسازید و سپس اطلاعات کسب‌وکار را تکمیل کنید.</p>
         </div>
 
-        <label className="block text-sm font-medium">ایمیل</label>
+        <label className="block text-sm font-medium">شماره موبایل</label>
         <input
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          type="email"
-          autoComplete="email"
+          value={mobile}
+          onChange={(e) => setMobile(e.target.value)}
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
           required
           className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
         />
@@ -60,7 +61,7 @@ export default function RegisterPage() {
           type="password"
           autoComplete="new-password"
           required
-          minLength={6}
+          minLength={8}
           className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
         />
 
