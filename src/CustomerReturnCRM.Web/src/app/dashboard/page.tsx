@@ -111,7 +111,7 @@ export default function DashboardPage() {
             <h1 className="mt-0.5 text-[25px] font-black tracking-tight text-slate-950 sm:text-3xl">داشبورد</h1>
             <p className="mt-1 text-xs leading-5 text-slate-600 sm:text-sm">وضعیت امروز {business?.name ?? "کسب‌وکار شما"} را در یک نگاه ببینید.</p>
           </div>
-          <Link href="/appointments/new" className="crm-action self-start !min-h-9 !rounded-xl !px-3.5 !py-2 !text-xs bg-gradient-to-l from-pink-500 to-rose-500 shadow-md shadow-pink-200 hover:from-pink-600 hover:to-rose-600 sm:self-auto sm:!min-h-10 sm:!px-4 sm:!text-sm">
+          <Link href="/appointments" className="crm-action self-start !min-h-9 !rounded-xl !px-3.5 !py-2 !text-xs bg-gradient-to-l from-pink-500 to-rose-500 shadow-md shadow-pink-200 hover:from-pink-600 hover:to-rose-600 sm:self-auto sm:!min-h-10 sm:!px-4 sm:!text-sm">
             <Icon name="calendarPlus" className="ml-1.5 h-4 w-4" />ثبت نوبت جدید
           </Link>
         </header>

@@ -53,8 +53,7 @@ public sealed class VisitManagementService : IVisitManagementService
         if (request.TotalAmount is < 0) throw new ArgumentException("Total amount cannot be negative.");
         var appointment = await _dbContext.Appointments.Include(x => x.AppointmentServices).SingleOrDefaultAsync(x => x.BusinessId == businessId && x.Id == appointmentId, cancellationToken);
         if (appointment is null) return null;
-        if (appointment.Status == AppointmentStatus.Completed) throw new InvalidOperationException("The appointment has already been completed.");
-        if (appointment.Status is AppointmentStatus.Cancelled or AppointmentStatus.NoShow) throw new InvalidOperationException("Cancelled or no-show appointments cannot be completed.");
+        if (appointment.Status != AppointmentStatus.Confirmed) throw new InvalidOperationException("Only confirmed appointments can be converted to a visit.");
         if (appointment.AppointmentServices.Count == 0) throw new InvalidOperationException("The appointment has no services to record as a visit.");
         var serviceIds = appointment.AppointmentServices.Select(x => x.ServiceId).Distinct().ToList();
         var suggestedReturns = await _dbContext.Services.Where(x => x.BusinessId == businessId && serviceIds.Contains(x.Id)).ToDictionaryAsync(x => x.Id, x => x.SuggestedReturnDays, cancellationToken);
@@ -70,6 +69,28 @@ public sealed class VisitManagementService : IVisitManagementService
         await transaction.CommitAsync(cancellationToken);
         await LoadDetailsAsync(visit, cancellationToken);
         return ToResult(visit);
+    }
+
+    public async Task<bool> DeleteAsync(Guid businessId, Guid visitId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        await EnsureMemberAsync(businessId, userId, cancellationToken);
+        var visit = await _dbContext.Visits.SingleOrDefaultAsync(x => x.BusinessId == businessId && x.Id == visitId, cancellationToken);
+        if (visit is null) return false;
+
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        if (visit.AppointmentId.HasValue)
+        {
+            var appointment = await _dbContext.Appointments.SingleOrDefaultAsync(x => x.BusinessId == businessId && x.Id == visit.AppointmentId.Value, cancellationToken);
+            if (appointment is not null && appointment.Status == AppointmentStatus.Completed)
+            {
+                appointment.Status = AppointmentStatus.Confirmed;
+                appointment.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+        _dbContext.Visits.Remove(visit);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return true;
     }
 
     private async Task<ReferenceData> LoadReferencesAsync(Guid businessId, Guid customerId, IReadOnlyCollection<VisitServiceRequest> requests, CancellationToken cancellationToken, bool requireActive)
