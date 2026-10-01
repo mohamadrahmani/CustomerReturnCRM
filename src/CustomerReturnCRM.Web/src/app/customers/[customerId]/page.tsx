@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { formatMoney } from "@/lib/formatters";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
