@@ -31,6 +31,13 @@ public partial class AddMobileAuthentication : Migration
             maxLength: 64,
             nullable: true);
 
+        migrationBuilder.AddColumn<int>(
+            name: "PasswordResetOtpAttemptCount",
+            table: "AspNetUsers",
+            type: "int",
+            nullable: false,
+            defaultValue: 0);
+
         migrationBuilder.AddColumn<DateTime>(
             name: "PasswordResetOtpRequestedAtUtc",
             table: "AspNetUsers",
@@ -57,6 +64,10 @@ public partial class AddMobileAuthentication : Migration
 
         migrationBuilder.DropColumn(
             name: "PasswordResetOtpHash",
+            table: "AspNetUsers");
+
+        migrationBuilder.DropColumn(
+            name: "PasswordResetOtpAttemptCount",
             table: "AspNetUsers");
 
         migrationBuilder.DropColumn(
