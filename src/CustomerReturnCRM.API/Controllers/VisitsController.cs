@@ -86,6 +86,18 @@ public sealed class VisitsController : ControllerBase
         }
     }
 
+    [HttpDelete("{visitId:guid}")]
+    public async Task<IActionResult> Delete(Guid businessId, Guid visitId, [FromServices] IVisitManagementService service, CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+        try
+        {
+            return await service.DeleteAsync(businessId, visitId, userId, cancellationToken) ? NoContent() : NotFound();
+        }
+        catch (UnauthorizedAccessException) { return Forbid(); }
+        catch (InvalidOperationException exception) { return Conflict(new { error = exception.Message }); }
+    }
+
     private bool TryGetUserId(out Guid userId) =>
         Guid.TryParse(
             User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub"),
