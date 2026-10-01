@@ -57,7 +57,7 @@ public sealed class AppointmentManagementService : IAppointmentManagementService
         if (ids.Count == 0) throw new ArgumentException("At least one staff member is required.");
         var query = _dbContext.Appointments.AsNoTracking().Where(x => x.BusinessId == businessId && x.StartAt < endAt && x.EndAt > startAt && x.Status != AppointmentStatus.Cancelled && x.Status != AppointmentStatus.NoShow && x.AppointmentServices.Any(s => ids.Contains(s.StaffId)));
         if (excludedAppointmentId.HasValue) query = query.Where(x => x.Id != excludedAppointmentId.Value);
-        if (await query.AnyAsync(cancellationToken)) throw new InvalidOperationException("One or more selected staff members already have an appointment during this time.");
+        if (await query.AnyAsync(cancellationToken)) throw new InvalidOperationException("برای یکی از کارکنان انتخاب‌شده، در این بازه زمانی نوبت دیگری ثبت شده است.");
     }
 
     private static void AddServices(Appointment appointment,IReadOnlyCollection<AppointmentServiceRequest> requests,ReferenceSnapshots snapshots){foreach(var request in requests){var service=snapshots.Services[request.ServiceId]; appointment.AppointmentServices.Add(new AppointmentService{Id=Guid.NewGuid(),AppointmentId=appointment.Id,ServiceId=service.Id,StaffId=request.StaffId,ServiceTitle=service.Title,Price=service.DefaultPrice,DurationMinutes=service.DefaultDurationMinutes});}}
