@@ -108,7 +108,8 @@ public sealed class AuthenticationService : IAuthenticationService
             .Select(member => new AuthenticationBusinessResult(
                 member.BusinessId,
                 member.Business.Name,
-                member.Role))
+                member.Role,
+                member.Business.PublicSlug))
             .ToListAsync(cancellationToken);
 
         return new AuthenticationResult(user.Id, user.Email!, token, expiresAt, businesses);
