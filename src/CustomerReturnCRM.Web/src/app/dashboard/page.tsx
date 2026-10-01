@@ -98,7 +98,7 @@ export default function DashboardPage() {
   const stats = [
     ["مشتریان فعال", data.activeCustomerCount, "مشاهده مشتریان", "/customers", "users", "bg-rose-50 border-rose-100", "bg-rose-100 text-rose-600"],
     ["نوبت‌های امروز", data.todayAppointments.length, "مشاهده نوبت‌ها", "/appointments", "calendar", "bg-violet-50 border-violet-100", "bg-violet-100 text-violet-600"],
-    ["پیگیری‌های باز", data.pendingReminders.length, "مشاهده پیگیری‌ها", "/follow-ups", "clock", "bg-emerald-50 border-emerald-100", "bg-emerald-100 text-emerald-600"],
+    ["پیگیری‌های امروز", data.todayReminders.length, "مشاهده پیگیری‌ها", "/follow-ups", "clock", "bg-emerald-50 border-emerald-100", "bg-emerald-100 text-emerald-600"],
     ["نیازمند اقدام", followUpCount, "مشاهده موارد", "/return-analysis", "alert", "bg-amber-50 border-amber-100", "bg-amber-100 text-amber-600"],
   ] as const;
 
@@ -167,10 +167,10 @@ export default function DashboardPage() {
             )}
           </DashboardPanel>
 
-          <DashboardPanel title="پیگیری‌های باز" href="/follow-ups" action="مشاهده همه" accent="pink">
-            {data.pendingReminders.length === 0 ? <Empty text="پیگیری بازی برای نمایش وجود ندارد." /> : (
+          <DashboardPanel title="پیگیری‌های امروز" href="/follow-ups" action="مشاهده همه" accent="pink">
+            {data.todayReminders.length === 0 ? <Empty text="برای امروز پیگیری‌ای برای نمایش وجود ندارد." /> : (
               <div className="divide-y divide-slate-100">
-                {data.pendingReminders.slice(0, 5).map((item) => (
+                {data.todayReminders.slice(0, 5).map((item) => (
                   <div key={item.id} className="flex items-center gap-2.5 py-2.5 first:pt-0 last:pb-0">
                     <span className="h-2 w-2 shrink-0 rounded-full bg-pink-500 ring-4 ring-pink-50" />
                     <Avatar name={item.customerName} size="sm" />
