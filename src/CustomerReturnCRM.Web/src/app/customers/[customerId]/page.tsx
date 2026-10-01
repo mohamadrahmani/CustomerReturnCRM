@@ -8,11 +8,10 @@ import { getCustomerProfile, updateCustomer } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 import { PersianDatePicker } from "@/components/persian-date-picker";
 import { SmsComposer } from "@/components/sms-composer";
+import { formatMoney } from "@/lib/formatters";
 
 const faDate = (value: string | null) => value ? new Intl.DateTimeFormat("fa-IR", { year: "numeric", month: "long", day: "numeric" }).format(new Date(value)) : "—";
 const faDateTime = (value: string) => new Intl.DateTimeFormat("fa-IR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
-const money = (value: number | null) => value == null ? "—" : `${value.toLocaleString("fa-IR")} تومان`;
-
 function Avatar() { return <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-pink-50 text-pink-500 ring-1 ring-pink-100"><svg viewBox="0 0 48 48" fill="none" className="h-12 w-12" aria-hidden="true"><path d="M8 40c2-7.2 7.4-10.8 16-10.8S38 32.8 40 40" fill="currentColor" opacity=".72"/><path d="M15 23C12.8 14.2 17.2 7 25.1 7c7.6 0 12.5 6.3 9.7 15.8-1.8-2.4-4.2-4.7-7.2-5.6-2.4 2.2-5.7 3.2-9.9 2.7-.8.8-1.6 1.7-2.7 2.6Z" fill="currentColor"/><path d="M17.5 25c1.1 3 3.5 4.7 6.7 4.7 3.5 0 5.9-1.9 6.9-4.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity=".45"/></svg></span>; }
 function Section({ title, count, children }: { title: string; count?: number; children: React.ReactNode }) { return <section className="crm-card overflow-hidden"><div className="flex items-center justify-between border-b border-slate-100 px-4 py-3.5 sm:px-5"><h2 className="text-sm font-black text-slate-900">{title}</h2>{count != null && <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black text-slate-500">{count.toLocaleString("fa-IR")}</span>}</div>{children}</section>; }
 function ReturnBadge({ days, future }: { days: number; future: boolean }) { if (future) return <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black text-blue-700">نوبت ثبت شده</span>; if (days > 30) return <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-black text-rose-700">در معرض ریسک</span>; if (days > 0) return <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-black text-amber-700">عقب‌افتاده</span>; return <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-700">نزدیک موعد</span>; }
