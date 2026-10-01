@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { getDashboard } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
+import { formatMoney } from "@/lib/formatters";
 
 function formatTime(value: string) {
   return new Intl.DateTimeFormat("fa-IR", { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
@@ -98,7 +99,7 @@ export default function DashboardPage() {
   const stats = [
     ["مشتریان فعال", data.activeCustomerCount, "مشاهده مشتریان", "/customers", "users", "bg-rose-50 border-rose-100", "bg-rose-100 text-rose-600"],
     ["نوبت‌های امروز", data.todayAppointments.length, "مشاهده نوبت‌ها", "/appointments", "calendar", "bg-violet-50 border-violet-100", "bg-violet-100 text-violet-600"],
-    ["پیگیری‌های باز", data.pendingReminders.length, "مشاهده پیگیری‌ها", "/follow-ups", "clock", "bg-emerald-50 border-emerald-100", "bg-emerald-100 text-emerald-600"],
+    ["پیگیری‌های امروز", data.pendingReminders.length, "مشاهده پیگیری‌ها", "/follow-ups", "clock", "bg-emerald-50 border-emerald-100", "bg-emerald-100 text-emerald-600"],
     ["نیازمند اقدام", followUpCount, "مشاهده موارد", "/return-analysis", "alert", "bg-amber-50 border-amber-100", "bg-amber-100 text-amber-600"],
   ] as const;
 
@@ -111,7 +112,7 @@ export default function DashboardPage() {
             <h1 className="mt-0.5 text-[25px] font-black tracking-tight text-slate-950 sm:text-3xl">داشبورد</h1>
             <p className="mt-1 text-xs leading-5 text-slate-600 sm:text-sm">وضعیت امروز {business?.name ?? "کسب‌وکار شما"} را در یک نگاه ببینید.</p>
           </div>
-          <Link href="/appointments/new" className="crm-action self-start !min-h-9 !rounded-xl !px-3.5 !py-2 !text-xs bg-gradient-to-l from-pink-500 to-rose-500 shadow-md shadow-pink-200 hover:from-pink-600 hover:to-rose-600 sm:self-auto sm:!min-h-10 sm:!px-4 sm:!text-sm">
+          <Link href="/appointments" className="crm-action self-start !min-h-9 !rounded-xl !px-3.5 !py-2 !text-xs bg-gradient-to-l from-pink-500 to-rose-500 shadow-md shadow-pink-200 hover:from-pink-600 hover:to-rose-600 sm:self-auto sm:!min-h-10 sm:!px-4 sm:!text-sm">
             <Icon name="calendarPlus" className="ml-1.5 h-4 w-4" />ثبت نوبت جدید
           </Link>
         </header>
@@ -167,8 +168,8 @@ export default function DashboardPage() {
             )}
           </DashboardPanel>
 
-          <DashboardPanel title="پیگیری‌های باز" href="/follow-ups" action="مشاهده همه" accent="pink">
-            {data.pendingReminders.length === 0 ? <Empty text="پیگیری بازی برای نمایش وجود ندارد." /> : (
+          <DashboardPanel title="پیگیری‌های امروز" href="/follow-ups" action="مشاهده همه" accent="pink">
+            {data.pendingReminders.length === 0 ? <Empty text="برای امروز پیگیری‌ای برای نمایش وجود ندارد." /> : (
               <div className="divide-y divide-slate-100">
                 {data.pendingReminders.slice(0, 5).map((item) => (
                   <div key={item.id} className="flex items-center gap-2.5 py-2.5 first:pt-0 last:pb-0">
@@ -191,7 +192,7 @@ export default function DashboardPage() {
                 <Link href={`/customers/${item.customerId}`} key={item.id} className="group flex items-center gap-2.5 py-2.5 first:pt-0 last:pb-0 sm:rounded-2xl sm:border sm:border-slate-100 sm:bg-slate-50/60 sm:p-3.5">
                   <Avatar name={item.customerName} size="sm" />
                   <div className="min-w-0 flex-1"><p className="truncate text-sm font-black text-slate-800">{item.customerName}</p><p className="mt-0.5 text-[11px] text-slate-500">{formatRelativeDate(item.visitAt)}</p></div>
-                  <div className="shrink-0 text-left"><p className="text-[9px] text-slate-400">{formatDate(item.visitAt)}</p>{item.totalAmount != null && <p className="mt-0.5 text-[10px] font-black text-slate-900">{item.totalAmount.toLocaleString("fa-IR")} تومان</p>}</div>
+                  <div className="shrink-0 text-left"><p className="text-[9px] text-slate-400">{formatDate(item.visitAt)}</p>{item.totalAmount != null && <p className="mt-0.5 text-[10px] font-black text-slate-900">{formatMoney(item.totalAmount)}</p>}</div>
                 </Link>
               ))}
             </div>

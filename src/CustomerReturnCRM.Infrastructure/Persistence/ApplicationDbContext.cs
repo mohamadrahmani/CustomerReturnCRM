@@ -30,6 +30,13 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
     {
         base.OnModelCreating(builder);
 
+        builder.Entity<ApplicationUser>(entity =>
+        {
+            entity.Property(x => x.PhoneNumber).HasMaxLength(30);
+            entity.Property(x => x.PasswordResetOtpHash).HasMaxLength(64);
+            entity.HasIndex(x => x.PhoneNumber).IsUnique().HasFilter("[PhoneNumber] IS NOT NULL");
+        });
+
         builder.Entity<Business>(entity =>
         {
             entity.ToTable("Businesses"); entity.HasKey(x => x.Id);

@@ -12,11 +12,12 @@ public static class DevelopmentSeeder
     {
         var now = DateTime.UtcNow;
         const string email = "admin@demo.local";
-        const string password = "Admin@123";
+        const string password = "Admin1234";
+        const string mobile = "09120000000";
         var user = await userManager.FindByEmailAsync(email);
         if (user is null)
         {
-            user = new ApplicationUser { Id = Guid.Parse("10000000-0000-0000-0000-000000000001"), UserName = email, Email = email, EmailConfirmed = true };
+            user = new ApplicationUser { Id = Guid.Parse("10000000-0000-0000-0000-000000000001"), UserName = mobile, Email = email, PhoneNumber = mobile, PhoneNumberConfirmed = true, EmailConfirmed = true };
             var result = await userManager.CreateAsync(user, password);
             if (!result.Succeeded) throw new InvalidOperationException(string.Join("; ", result.Errors.Select(x => x.Description)));
         }
