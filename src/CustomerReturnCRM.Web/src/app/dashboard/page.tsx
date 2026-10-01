@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { getDashboard } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
+import { formatMoney } from "@/lib/formatters";
 
 function formatTime(value: string) {
   return new Intl.DateTimeFormat("fa-IR", { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
@@ -191,7 +192,7 @@ export default function DashboardPage() {
                 <Link href={`/customers/${item.customerId}`} key={item.id} className="group flex items-center gap-2.5 py-2.5 first:pt-0 last:pb-0 sm:rounded-2xl sm:border sm:border-slate-100 sm:bg-slate-50/60 sm:p-3.5">
                   <Avatar name={item.customerName} size="sm" />
                   <div className="min-w-0 flex-1"><p className="truncate text-sm font-black text-slate-800">{item.customerName}</p><p className="mt-0.5 text-[11px] text-slate-500">{formatRelativeDate(item.visitAt)}</p></div>
-                  <div className="shrink-0 text-left"><p className="text-[9px] text-slate-400">{formatDate(item.visitAt)}</p>{item.totalAmount != null && <p className="mt-0.5 text-[10px] font-black text-slate-900">{item.totalAmount.toLocaleString("fa-IR")} تومان</p>}</div>
+                  <div className="shrink-0 text-left"><p className="text-[9px] text-slate-400">{formatDate(item.visitAt)}</p>{item.totalAmount != null && <p className="mt-0.5 text-[10px] font-black text-slate-900">{formatMoney(item.totalAmount)}</p>}</div>
                 </Link>
               ))}
             </div>
