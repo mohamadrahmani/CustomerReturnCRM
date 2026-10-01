@@ -4,4 +4,7 @@ namespace CustomerReturnCRM.Infrastructure.Identity;
 
 public sealed class ApplicationUser : IdentityUser<Guid>
 {
+    public string? PasswordResetOtpHash { get; set; }
+    public DateTime? PasswordResetOtpExpiresAtUtc { get; set; }
+    public DateTime? PasswordResetOtpRequestedAtUtc { get; set; }
 }
