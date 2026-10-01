@@ -73,6 +73,7 @@ public sealed class AuthenticationService : IAuthenticationService
         user.PasswordResetOtpHash = HashOtp(otp);
         user.PasswordResetOtpExpiresAtUtc = now.AddMinutes(OtpLifetimeMinutes);
         user.PasswordResetOtpRequestedAtUtc = now;
+        user.PasswordResetOtpAttemptCount = 0;
         await _userManager.UpdateAsync(user);
 
         var patternId = _configuration["Sms:SmsIr:PasswordResetPatternId"];
@@ -111,6 +112,7 @@ public sealed class AuthenticationService : IAuthenticationService
         user.PasswordResetOtpHash = null;
         user.PasswordResetOtpExpiresAtUtc = null;
         user.PasswordResetOtpRequestedAtUtc = null;
+        user.PasswordResetOtpAttemptCount = 0;
         await _userManager.UpdateAsync(user);
         await _userManager.UpdateSecurityStampAsync(user);
     }
@@ -121,9 +123,22 @@ public sealed class AuthenticationService : IAuthenticationService
         if (!Regex.IsMatch(otp ?? "", @"^[0-9]{6}$")) return null;
         var user = await _userManager.Users.SingleOrDefaultAsync(x => x.PhoneNumber == mobile, cancellationToken);
         if (user?.PasswordResetOtpHash is null || user.PasswordResetOtpExpiresAtUtc <= _timeProvider.GetUtcNow().UtcDateTime) return null;
-        return CryptographicOperations.FixedTimeEquals(
+        if (user.PasswordResetOtpAttemptCount >= 5) return null;
+        var valid = CryptographicOperations.FixedTimeEquals(
             Convert.FromHexString(user.PasswordResetOtpHash),
-            Convert.FromHexString(HashOtp(otp))) ? user : null;
+            Convert.FromHexString(HashOtp(otp)));
+        if (!valid)
+        {
+            user.PasswordResetOtpAttemptCount++;
+            if (user.PasswordResetOtpAttemptCount >= 5)
+            {
+                user.PasswordResetOtpHash = null;
+                user.PasswordResetOtpExpiresAtUtc = null;
+            }
+            await _userManager.UpdateAsync(user);
+            return null;
+        }
+        return user;
     }
 
     private static string HashOtp(string otp) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(otp)));
