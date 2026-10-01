@@ -3,7 +3,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "Customer Return CRM",
+  title: "Customer Return CRM | Bemooni",
   description: "Customer retention and return-analysis CRM for service businesses",
 };
 
