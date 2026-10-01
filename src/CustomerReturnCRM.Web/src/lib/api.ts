@@ -2,7 +2,6 @@ import { readAuth } from "./auth";
 import type { SmsCampaignStatus, SmsRecipientStatus } from "./sms";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5108";
-export const PUBLIC_APP_BASE_URL = (process.env.NEXT_PUBLIC_PUBLIC_APP_BASE_URL ?? (typeof window !== "undefined" ? window.location.origin : "")).replace(/\/$/, "");
 
 export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const auth = readAuth();
@@ -26,7 +25,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 }
 
 export type AuthenticationBusiness = { id: string; name: string; role: string; publicSlug: string | null };
-export type AuthenticationResult = { userId: string; email: string; token: string; expiresAt: string; businesses: AuthenticationBusiness[] };
+export type AuthenticationResult = { userId: string; mobile: string; token: string; expiresAt: string; businesses: AuthenticationBusiness[] };
 export type BusinessSetupRequest = { name: string; businessType: string; mobile: string; address?: string; city?: string; firstName: string; lastName: string; staffMobile?: string; serviceTemplateId?: string };
 export type BusinessSetupResult = { businessId: string; membershipId: string; staffId: string; serviceId: string | null };
 export type DashboardAppointment = { id: string; customerId: string; customerName: string; startAt: string; endAt: string; status: number; services: string[] };
@@ -48,8 +47,11 @@ export type CustomerProfile = { customer: Customer; visits: CustomerProfileVisit
 export type BaleConnectInviteResult = { customerId: string; connectUrl: string; expiresAtUtc: string };
 export type BaleConnectSmsResult = { invite: BaleConnectInviteResult; smsSent: boolean; smsError: string | null };
 
-export async function login(email: string, password: string) { return apiFetch<AuthenticationResult>("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }); }
-export async function register(email: string, password: string) { return apiFetch<AuthenticationResult>("/api/auth/register", { method: "POST", body: JSON.stringify({ email, password }) }); }
+export async function login(mobile: string, password: string) { return apiFetch<AuthenticationResult>("/api/auth/login", { method: "POST", body: JSON.stringify({ mobile, password }) }); }
+export async function register(mobile: string, password: string) { return apiFetch<AuthenticationResult>("/api/auth/register", { method: "POST", body: JSON.stringify({ mobile, password }) }); }
+export async function requestPasswordReset(mobile: string) { return apiFetch<void>("/api/auth/forgot-password/request", { method: "POST", body: JSON.stringify({ mobile }) }); }
+export async function verifyPasswordResetOtp(mobile: string, otp: string) { return apiFetch<{ verified: boolean }>("/api/auth/forgot-password/verify", { method: "POST", body: JSON.stringify({ mobile, otp }) }); }
+export async function resetPassword(mobile: string, otp: string, newPassword: string) { return apiFetch<void>("/api/auth/forgot-password/reset", { method: "POST", body: JSON.stringify({ mobile, otp, newPassword }) }); }
 export async function createBusiness(request: BusinessSetupRequest) { return apiFetch<BusinessSetupResult>("/api/businesses", { method: "POST", body: JSON.stringify(request) }); }
 export async function getDashboard(businessId: string) { return apiFetch<DashboardResult>(`/api/businesses/${businessId}/dashboard`); }
 export async function getCustomers(businessId: string, page = 1, pageSize = 20, search = "", isActive: boolean | null = true) { const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) }); if (search.trim()) params.set("search", search.trim()); if (isActive !== null) params.set("isActive", String(isActive)); return apiFetch<PagedResult<Customer>>(`/api/businesses/${businessId}/customers?${params.toString()}`); }
