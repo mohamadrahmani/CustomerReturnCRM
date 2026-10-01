@@ -56,4 +56,5 @@ public interface IVisitManagementService
     Task<PagedResult<VisitResult>> ListAsync(Guid businessId, Guid userId, DateTime? from, DateTime? to, int page = 1, int pageSize = 20, CancellationToken cancellationToken = default);
     Task<VisitResult?> GetAsync(Guid businessId, Guid visitId, Guid userId, CancellationToken cancellationToken = default);
     Task<VisitResult?> CompleteAppointmentAsync(Guid businessId, Guid appointmentId, Guid userId, CompleteAppointmentRequest request, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid businessId, Guid visitId, Guid userId, CancellationToken cancellationToken = default);
 }
