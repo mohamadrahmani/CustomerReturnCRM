@@ -7,7 +7,7 @@ import { useAuth } from "@/components/auth-provider";
 
 export default function LoginPage() {
   const { setAuth } = useAuth();
-  const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,7 +17,7 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const result = await login(email.trim(), password);
+      const result = await login(mobile.trim(), password);
       setAuth(result);
       window.location.href = "/dashboard";
     } catch (err) {
@@ -36,8 +36,8 @@ export default function LoginPage() {
           <p className="mt-2 text-sm leading-6 text-slate-500">برای ورود به پنل مدیریت، اطلاعات حساب خود را وارد کنید.</p>
         </div>
 
-        <label className="block text-sm font-medium">ایمیل</label>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoComplete="email" required className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100" />
+        <label className="block text-sm font-medium">شماره موبایل</label>
+        <input value={mobile} onChange={(e) => setMobile(e.target.value)} type="tel" inputMode="tel" autoComplete="tel" required className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100" />
 
         <label className="mt-4 block text-sm font-medium">رمز عبور</label>
         <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" autoComplete="current-password" required className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100" />
@@ -47,6 +47,8 @@ export default function LoginPage() {
         <button type="submit" disabled={loading} className="mt-6 w-full rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50">
           {loading ? "در حال ورود..." : "ورود"}
         </button>
+
+        <p className="mt-4 text-center text-sm"><Link href="/forgot-password" className="font-semibold text-indigo-600 hover:text-indigo-700">رمز عبور را فراموش کرده‌اید؟</Link></p>
 
         <p className="mt-5 text-center text-sm text-slate-500">
           حساب کاربری ندارید؟{" "}
