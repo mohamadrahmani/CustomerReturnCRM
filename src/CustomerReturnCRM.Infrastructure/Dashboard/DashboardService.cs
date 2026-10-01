@@ -55,8 +55,11 @@ public sealed class DashboardService : IDashboardService
                     .ToList()))
             .ToListAsync(cancellationToken);
 
-        var pendingReminders = await _dbContext.Reminders.AsNoTracking()
-            .Where(x => x.BusinessId == businessId && x.Status == ReminderStatus.Pending)
+        var todayReminders = await _dbContext.Reminders.AsNoTracking()
+            .Where(x => x.BusinessId == businessId
+                && x.Status == ReminderStatus.Pending
+                && x.DueAt >= todayUtc
+                && x.DueAt < tomorrowUtc)
             .OrderBy(x => x.DueAt)
             .Select(x => new DashboardReminderResult(
                 x.Id,
@@ -88,7 +91,7 @@ public sealed class DashboardService : IDashboardService
             today,
             activeCustomerCount,
             appointments,
-            pendingReminders,
+            todayReminders,
             (await _returnAnalysisService.GetDueSoonAsync(businessId, userId, 1, 100, cancellationToken)).Items,
             (await _returnAnalysisService.GetOverdueAsync(businessId, userId, 1, 100, cancellationToken)).Items,
             (await _returnAnalysisService.GetAtRiskAsync(businessId, userId, 1, 100, cancellationToken)).Items,
