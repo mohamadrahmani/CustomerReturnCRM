@@ -71,18 +71,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            set -e
-            cd /opt/CustomerReturnCRM
-            git pull --ff-only origin main
-            printf '%s' "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
-            export IMAGE_TAG="${{ github.sha }}"
-            docker compose pull api web migration
-            docker compose run --rm migration
-            docker compose up -d --no-build --force-recreate --remove-orphans api web
-            docker image prune -f
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -e
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/deploy_key             -o IdentitiesOnly=yes             -o ConnectTimeout=30             "$VPS_USER@$VPS_HOST" << EOF
+          set -e
+          cd /opt/CustomerReturnCRM
+          git pull --ff-only origin main
+          printf '%s' '$GHCR_TOKEN' | docker login ghcr.io -u '$GHCR_USERNAME' --password-stdin
+          export IMAGE_TAG='$IMAGE_TAG'
+          docker compose pull api web migration
+          docker compose run --rm migration
+          docker compose up -d --no-build --force-recreate --remove-orphans api web
+          docker image prune -f
+          EOF
