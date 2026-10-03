@@ -29,7 +29,7 @@ jobs:
           file: Docker/API/Dockerfile
           load: true
           tags: |
-            ghcr.io/mohamadrahmani/customerreturncrm-api:${{{ github.sha }}
+            ghcr.io/mohamadrahmani/customerreturncrm-api:${{ github.sha }}
             ghcr.io/mohamadrahmani/customerreturncrm-api:latest
           cache-from: type=gha,scope=api
           cache-to: type=gha,mode=max,scope=api
@@ -41,7 +41,7 @@ jobs:
           file: Docker/API/Dockerfile.migration
           load: true
           tags: |
-            ghcr.io/mohamadrahmani/customerreturncrm-migration:${{{ github.sha }}
+            ghcr.io/mohamadrahmani/customerreturncrm-migration:${{ github.sha }}
             ghcr.io/mohamadrahmani/customerreturncrm-migration:latest
           cache-from: type=gha,scope=migration
           cache-to: type=gha,mode=max,scope=migration
@@ -53,16 +53,16 @@ jobs:
           file: Docker/Web/Dockerfile
           load: true
           tags: |
-            ghcr.io/mohamadrahmani/customerreturncrm-web:${{{ github.sha }}
+            ghcr.io/mohamadrahmani/customerreturncrm-web:${{ github.sha }}
             ghcr.io/mohamadrahmani/customerreturncrm-web:latest
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 
       - name: Prepare SSH
         env:
-          VPS_HOST: ${{{ secrets.VPS_HOST }}
-          VPS_USER: ${{{ secrets.VPS_USER }}
-          VPS_SSH_KEY: ${{{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
         run: |
           set -e
           mkdir -p ~/.ssh
@@ -73,9 +73,9 @@ jobs:
 
       - name: Sync images and deploy
         env:
-          VPS_HOST: ${{{ secrets.VPS_HOST }}
-          VPS_USER: ${{{ secrets.VPS_USER }}
-          IMAGE_TAG: ${{{ github.sha }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           set -euo pipefail
 
