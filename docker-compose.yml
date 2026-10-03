@@ -1,17 +1,13 @@
 services:
 
   migration:
-    build:
-      context: .
-      dockerfile: Docker/API/Dockerfile.migration
+    image: ghcr.io/mohamadrahmani/customerreturncrm-migration:${IMAGE_TAG:-latest}
     container_name: customerreturncrm-migration
     environment:
       ConnectionStrings__DefaultConnection: "Server=185.8.174.94,1433;Database=CustomerReturnCRM;User Id=BmsDbUser;Password=${DB_PASSWORD};TrustServerCertificate=True;Connection Timeout=30;"
 
   api:
-    build:
-      context: .
-      dockerfile: Docker/API/Dockerfile
+    image: ghcr.io/mohamadrahmani/customerreturncrm-api:${IMAGE_TAG:-latest}
     container_name: customerreturncrm-api
     environment:
       ConnectionStrings__DefaultConnection: "Server=185.8.174.94,1433;Database=CustomerReturnCRM;User Id=BmsDbUser;Password=${DB_PASSWORD};TrustServerCertificate=True;Connection Timeout=30;"
@@ -23,9 +19,7 @@ services:
       - "127.0.0.1:8080:8080"
 
   web:
-    build:
-      context: .
-      dockerfile: Docker/Web/Dockerfile
+    image: ghcr.io/mohamadrahmani/customerreturncrm-web:${IMAGE_TAG:-latest}
     container_name: customerreturncrm-web
     environment:
       NEXT_PUBLIC_API_BASE_URL: "/api"
