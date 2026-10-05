@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations;
 
+[Migration("20261001150000_AddMobileAuthentication")]
 public partial class AddMobileAuthentication : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
