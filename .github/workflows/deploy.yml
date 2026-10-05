@@ -91,52 +91,17 @@ jobs:
           ssh "${SSH_OPTS[@]}" "$VPS_USER@$VPS_HOST" \
             'cd /opt/CustomerReturnCRM && git pull --ff-only origin main'
 
-          echo "Preparing Docker image archive..."
+          echo "Transferring Docker images to VPS..."
+
           docker save \
             "ghcr.io/mohamadrahmani/customerreturncrm-api:$IMAGE_TAG" \
             "ghcr.io/mohamadrahmani/customerreturncrm-migration:$IMAGE_TAG" \
             "ghcr.io/mohamadrahmani/customerreturncrm-web:$IMAGE_TAG" \
-            | gzip -1 > customerreturncrm-images.tar.gz
+            | gzip -1 \
+            | ssh "${SSH_OPTS[@]}" \
+                "$VPS_USER@$VPS_HOST" \
+                'set -o pipefail; gunzip | docker load'
 
-          echo "Docker image archive size:"
-          ls -lh customerreturncrm-images.tar.gz
+          echo "Docker images loaded successfully on VPS."
 
-          echo "Creating remote transfer directory..."
-          ssh "${SSH_OPTS[@]}" "$VPS_USER@$VPS_HOST" \
-            'mkdir -p /opt/CustomerReturnCRM/.deploy'
 
-          echo "Transferring Docker images to VPS..."
-          for attempt in 1 2 3; do
-            if rsync -av --partial --append-verify --progress \
-              -e "ssh ${SSH_OPTS[*]}" \
-              customerreturncrm-images.tar.gz \
-              "$VPS_USER@$VPS_HOST:/opt/CustomerReturnCRM/.deploy/customerreturncrm-images.tar.gz"; then
-              break
-            fi
-
-            if [ "$attempt" -eq 3 ]; then
-              echo "Image transfer failed after 3 attempts."
-              exit 1
-            fi
-
-            echo "Transfer interrupted; retrying (attempt $((attempt + 1))/3)..."
-            sleep 5
-          done
-
-          echo "Loading Docker images on VPS..."
-          ssh "${SSH_OPTS[@]}" "$VPS_USER@$VPS_HOST" << EOF
-          set -euo pipefail
-          cd /opt/CustomerReturnCRM
-
-          gunzip -c .deploy/customerreturncrm-images.tar.gz | docker load
-          rm -f .deploy/customerreturncrm-images.tar.gz
-
-          export IMAGE_TAG='${{ github.sha }}'
-
-          docker compose run --rm --pull never migration
-          docker compose up -d --pull never --no-build --force-recreate --remove-orphans api web
-
-          docker image prune -f
-          EOF
-
-          rm -f customerreturncrm-images.tar.gz
