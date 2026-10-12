@@ -18,7 +18,15 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   }
   if (!response.ok) {
     let message = `Request failed (${response.status})`;
-    try { const body = await response.json(); message = body.error ?? body.detail ?? message; } catch { /* status message */ }
+    let errorCode = "";
+    try {
+      const body = await response.json();
+      message = body.error ?? body.detail ?? message;
+      errorCode = body.code ?? "";
+    } catch { /* status message */ }
+    if (errorCode === "LICENSE_INACTIVE" && typeof window !== "undefined") {
+      window.location.href = "/license-required";
+    }
     throw new Error(message);
   }
   if (response.status === 204) return undefined as T;
