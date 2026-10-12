@@ -25,8 +25,8 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   return response.json() as Promise<T>;
 }
 
-export type AuthenticationBusiness = { id: string; name: string; role: string; publicSlug: string | null };
-export type AuthenticationResult = { userId: string; mobile: string; token: string; expiresAt: string; businesses: AuthenticationBusiness[] };
+export type AuthenticationBusiness = { id: string; name: string; role: string; publicSlug: string | null; licenseIsActive: boolean; licenseStartDate: string | null; licenseEndDate: string | null };
+export type AuthenticationResult = { userId: string; mobile: string; token: string; expiresAt: string; isCentralAdmin: boolean; businesses: AuthenticationBusiness[] };
 export type BusinessSetupRequest = { name: string; businessType: string; mobile: string; address?: string; city?: string; firstName: string; lastName: string; staffMobile?: string; serviceTemplateId?: string };
 export type BusinessSetupResult = { businessId: string; membershipId: string; staffId: string; serviceId: string | null };
 export type DashboardAppointment = { id: string; customerId: string; customerName: string; startAt: string; endAt: string; status: number; services: string[] };
@@ -87,3 +87,24 @@ export async function getSmsCampaigns(businessId: string, status: SmsCampaignSta
 export async function getSmsCampaign(businessId: string, campaignId: string, includeRecipients = true) { return apiFetch<SmsCampaign>(`/api/businesses/${businessId}/sms/campaigns/${campaignId}?includeRecipients=${String(includeRecipients)}`); }
 export async function createSmsCampaign(businessId: string, request: CreateSmsCampaignRequest) { return apiFetch<SmsCampaign>(`/api/businesses/${businessId}/sms/campaigns`, { method: "POST", body: JSON.stringify(request) }); }
 export async function cancelSmsCampaign(businessId: string, campaignId: string) { return apiFetch<SmsCampaign>(`/api/businesses/${businessId}/sms/campaigns/${campaignId}/cancel`, { method: "POST" }); }
+
+
+export type CentralAdminBusiness = {
+  id: string; name: string; businessType: string; mobile: string; city: string | null;
+  ownerMobile: string | null; isActive: boolean; licenseIsActive: boolean;
+  licenseStartDate: string | null; licenseEndDate: string | null; licenseAdminNote: string | null;
+  licenseValid: boolean; createdAt: string;
+};
+
+export async function getCentralAdminBusinesses() {
+  return apiFetch<CentralAdminBusiness[]>("/api/central-admin/businesses");
+}
+
+export async function updateBusinessLicense(businessId: string, request: {
+  licenseIsActive: boolean; licenseStartDate: string | null; licenseEndDate: string | null;
+  licenseAdminNote: string | null;
+}) {
+  return apiFetch<CentralAdminBusiness>(`/api/central-admin/businesses/${businessId}/license`, {
+    method: "PUT", body: JSON.stringify(request),
+  });
+}
