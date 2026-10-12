@@ -92,7 +92,7 @@ export default function SetupPage() {
 
       setAuth({
         ...currentAuth,
-        businesses: [{ id: result.businessId, name: form.name.trim(), role: "Owner", publicSlug: null }],
+        businesses: [{ id: result.businessId, name: form.name.trim(), role: "Owner", publicSlug: null, licenseIsActive: true, licenseStartDate: null, licenseEndDate: null }],
       });
       router.replace("/dashboard");
     } catch (err) {
