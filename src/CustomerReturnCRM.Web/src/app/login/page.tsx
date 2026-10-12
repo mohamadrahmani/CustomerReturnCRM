@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(""); setLoading(true);
-    try { const result = await login(mobile.trim(), password); setAuth(result); window.location.href = "/dashboard"; }
+    try { const result = await login(mobile.trim(), password); setAuth(result); window.location.href = result.isCentralAdmin ? "/admin/businesses" : "/dashboard"; }
     catch (err) { setError(err instanceof Error ? err.message : "ورود انجام نشد."); }
     finally { setLoading(false); }
   }

@@ -13,6 +13,13 @@ public sealed class Business : AuditableEntity
     public string? PublicSlug { get; set; }
     public bool PublicBookingEnabled { get; set; } = true;
     public bool IsActive { get; set; } = true;
+
+    // Product license is separate from operational status and public booking settings.
+    public bool LicenseIsActive { get; set; } = true;
+    public DateTime? LicenseStartDate { get; set; }
+    public DateTime? LicenseEndDate { get; set; }
+    public string? LicenseAdminNote { get; set; }
+
     public ICollection<BusinessMember> Members { get; set; } = new List<BusinessMember>();
     public ICollection<Staff> Staff { get; set; } = new List<Staff>();
     public ICollection<BusinessWorkingHour> WorkingHours { get; set; } = new List<BusinessWorkingHour>();

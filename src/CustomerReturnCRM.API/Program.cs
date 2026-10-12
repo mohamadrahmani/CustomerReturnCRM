@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using System.Text;
 using CustomerReturnCRM.Application;
 using CustomerReturnCRM.Infrastructure;
@@ -40,7 +41,10 @@ builder.Services.AddAuthentication(options =>
     ValidateLifetime = true,
     ClockSkew = TimeSpan.FromMinutes(1)
 });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CentralAdmin", policy => policy.RequireAuthenticatedUser().RequireClaim("central_admin", "true"));
+});
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
@@ -68,8 +72,50 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "CustomerReturnCRM API v1");
     options.RoutePrefix = "swagger";
 });
+app.UseRouting();
 app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Enforce the product license on authenticated business-panel API routes.
+app.Use(async (context, next) =>
+{
+    var businessIdValue = context.Request.RouteValues["businessId"]?.ToString();
+    var isCentralAdmin = context.User.HasClaim("central_admin", "true");
+    if (context.User.Identity?.IsAuthenticated == true &&
+        !isCentralAdmin &&
+        Guid.TryParse(businessIdValue, out var businessId) &&
+        (context.Request.Path.StartsWithSegments("/api/businesses") ||
+         context.Request.Path.StartsWithSegments("/api/bale/businesses") ||
+         context.Request.Path.StartsWithSegments("/api/business-card/businesses")))
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var license = await db.Businesses.AsNoTracking()
+            .Where(x => x.Id == businessId)
+            .Select(x => new { x.LicenseIsActive, x.LicenseStartDate, x.LicenseEndDate })
+            .FirstOrDefaultAsync(context.RequestAborted);
+
+        var today = DateTime.UtcNow.Date;
+        var valid = license is not null &&
+                    license.LicenseIsActive &&
+                    (!license.LicenseStartDate.HasValue || license.LicenseStartDate.Value.Date <= today) &&
+                    (!license.LicenseEndDate.HasValue || license.LicenseEndDate.Value.Date >= today);
+
+        if (!valid)
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            context.Response.ContentType = "application/json; charset=utf-8";
+            await context.Response.WriteAsJsonAsync(new
+            {
+                code = "LICENSE_INACTIVE",
+                error = "اعتبار لایسنس این کسب‌وکار فعال نیست. برای تمدید با پشتیبانی SalonCRM تماس بگیرید."
+            }, context.RequestAborted);
+            return;
+        }
+    }
+
+    await next();
+});
 app.MapControllers();
 app.Run();

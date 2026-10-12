@@ -164,9 +164,9 @@ public sealed class AuthenticationService : IAuthenticationService
         var expirationMinutes = int.TryParse(jwtSection["ExpirationMinutes"], out var configuredExpirationMinutes) ? configuredExpirationMinutes : 120;
         if (expirationMinutes <= 0) throw new InvalidOperationException("JWT expiration must be greater than zero.");
         var expiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes);
-        var claims = new[] { new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), new Claim(ClaimTypes.MobilePhone, user.PhoneNumber!), new Claim("mobile", user.PhoneNumber!) };
+        var claims = new[] { new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), new Claim(ClaimTypes.MobilePhone, user.PhoneNumber!), new Claim("mobile", user.PhoneNumber!), new Claim("central_admin", user.IsCentralAdmin ? "true" : "false") };
         var token = new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(issuer, audience, claims, expires: expiresAt, signingCredentials: new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)), SecurityAlgorithms.HmacSha256)));
-        var businesses = await _dbContext.BusinessMembers.AsNoTracking().Where(x => x.UserId == user.Id && x.Business.IsActive).OrderBy(x => x.Business.Name).Select(x => new AuthenticationBusinessResult(x.BusinessId, x.Business.Name, x.Role, x.Business.PublicSlug)).ToListAsync(cancellationToken);
-        return new AuthenticationResult(user.Id, user.PhoneNumber!, token, expiresAt, businesses);
+        var businesses = await _dbContext.BusinessMembers.AsNoTracking().Where(x => x.UserId == user.Id && x.Business.IsActive).OrderBy(x => x.Business.Name).Select(x => new AuthenticationBusinessResult(x.BusinessId, x.Business.Name, x.Role, x.Business.PublicSlug, x.Business.LicenseIsActive, x.Business.LicenseStartDate, x.Business.LicenseEndDate)).ToListAsync(cancellationToken);
+        return new AuthenticationResult(user.Id, user.PhoneNumber!, token, expiresAt, user.IsCentralAdmin, businesses);
     }
 }

@@ -233,6 +233,19 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("LicenseEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("LicenseIsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LicenseAdminNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("LicenseStartDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Mobile")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -981,6 +994,9 @@ namespace CustomerReturnCRM.Infrastructure.Persistence.Migrations
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("IsCentralAdmin")
+                        .HasColumnType("bit");
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)

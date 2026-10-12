@@ -30,13 +30,14 @@ public sealed class ResetPasswordRequest
     public string NewPassword { get; init; } = null!;
 }
 
-public sealed record AuthenticationBusinessResult(Guid Id, string Name, string Role, string? PublicSlug);
+public sealed record AuthenticationBusinessResult(Guid Id, string Name, string Role, string? PublicSlug, bool LicenseIsActive, DateTime? LicenseStartDate, DateTime? LicenseEndDate);
 
 public sealed record AuthenticationResult(
     Guid UserId,
     string Mobile,
     string Token,
     DateTime ExpiresAt,
+    bool IsCentralAdmin,
     IReadOnlyList<AuthenticationBusinessResult> Businesses);
 
 public sealed record OtpVerificationResult(bool Verified);

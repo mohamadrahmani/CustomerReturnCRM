@@ -47,6 +47,7 @@ public sealed class ApplicationDbContext : IdentityDbContext<ApplicationUser, Id
             entity.Property(x => x.City).HasMaxLength(100);
             entity.Property(x => x.Description).HasMaxLength(2000);
             entity.Property(x => x.PublicSlug).HasMaxLength(120);
+            entity.Property(x => x.LicenseAdminNote).HasMaxLength(1000);
             entity.Property(x => x.CreatedAt).IsRequired();
             entity.HasIndex(x => x.Mobile);
             entity.HasIndex(x => x.PublicSlug).IsUnique().HasFilter("[PublicSlug] IS NOT NULL");
