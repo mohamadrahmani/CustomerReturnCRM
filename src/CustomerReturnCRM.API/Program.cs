@@ -85,7 +85,9 @@ app.Use(async (context, next) =>
     if (context.User.Identity?.IsAuthenticated == true &&
         !isCentralAdmin &&
         Guid.TryParse(businessIdValue, out var businessId) &&
-        context.Request.Path.StartsWithSegments("/api/businesses"))
+        (context.Request.Path.StartsWithSegments("/api/businesses") ||
+         context.Request.Path.StartsWithSegments("/api/bale/businesses") ||
+         context.Request.Path.StartsWithSegments("/api/business-card/businesses")))
     {
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
