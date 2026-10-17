@@ -74,3 +74,11 @@ span[aria-hidden="true"].h-9.w-9.rounded-full::before {
   height: 100%;
   background: url("/images/customer-female-avatar.webp") center / 78% auto no-repeat;
 }
+
+/* Theme-aware navigation and shell surfaces. */
+[data-industry] aside.border-l { border-color: var(--crm-border); background: var(--crm-surface); }
+[data-industry] aside a[class*="font-semibold"] { background: var(--crm-accent-soft); color: var(--crm-accent-strong); }
+[data-industry] aside a[class*="font-semibold"] span { color: var(--crm-accent-strong); }
+[data-industry] nav.fixed a.font-bold { color: var(--crm-accent-strong); }
+[data-industry] nav.fixed a.font-bold span { background: var(--crm-accent-soft); }
+[data-industry] header.sticky { border-color: var(--crm-border); }
