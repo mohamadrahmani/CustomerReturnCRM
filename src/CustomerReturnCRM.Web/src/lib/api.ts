@@ -33,7 +33,7 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   return response.json() as Promise<T>;
 }
 
-export type AuthenticationBusiness = { id: string; name: string; role: string; publicSlug: string | null; licenseIsActive: boolean; licenseStartDate: string | null; licenseEndDate: string | null };
+export type AuthenticationBusiness = { id: string; name: string; businessType: string; role: string; publicSlug: string | null; licenseIsActive: boolean; licenseStartDate: string | null; licenseEndDate: string | null };
 export type AuthenticationResult = { userId: string; mobile: string; token: string; expiresAt: string; isCentralAdmin: boolean; businesses: AuthenticationBusiness[] };
 export type BusinessSetupRequest = { name: string; businessType: string; mobile: string; address?: string; city?: string; firstName: string; lastName: string; staffMobile?: string; serviceTemplateId?: string };
 export type BusinessSetupResult = { businessId: string; membershipId: string; staffId: string; serviceId: string | null };

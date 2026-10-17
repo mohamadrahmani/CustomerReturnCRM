@@ -30,7 +30,7 @@ public sealed class ResetPasswordRequest
     public string NewPassword { get; init; } = null!;
 }
 
-public sealed record AuthenticationBusinessResult(Guid Id, string Name, string Role, string? PublicSlug, bool LicenseIsActive, DateTime? LicenseStartDate, DateTime? LicenseEndDate);
+public sealed record AuthenticationBusinessResult(Guid Id, string Name, string BusinessType, string Role, string? PublicSlug, bool LicenseIsActive, DateTime? LicenseStartDate, DateTime? LicenseEndDate);
 
 public sealed record AuthenticationResult(
     Guid UserId,

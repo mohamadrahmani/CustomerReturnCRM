@@ -92,7 +92,7 @@ export default function SetupPage() {
 
       setAuth({
         ...currentAuth,
-        businesses: [{ id: result.businessId, name: form.name.trim(), role: "Owner", publicSlug: null, licenseIsActive: true, licenseStartDate: null, licenseEndDate: null }],
+        businesses: [{ id: result.businessId, name: form.name.trim(), businessType: form.businessType, role: "Owner", publicSlug: null, licenseIsActive: true, licenseStartDate: null, licenseEndDate: null }],
       });
       router.replace("/dashboard");
     } catch (err) {
@@ -103,22 +103,22 @@ export default function SetupPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 md:px-8">
+    <main className="min-h-screen px-4 py-8 md:px-8" style={{ background: form.businessType === "Salon" ? "#faf6f2" : form.businessType === "Barbershop" ? "#f7f5f7" : form.businessType === "Repair" ? "#f4f7f7" : "#f7f7fb" }}>
       <div className="mx-auto max-w-3xl">
         <div className="mb-7">
-          <p className="text-sm font-semibold text-indigo-600">Customer Return CRM</p>
+          <p className="text-sm font-semibold" style={{ color: form.businessType === "Salon" ? "#c94f79" : form.businessType === "Barbershop" ? "#8b5e83" : form.businessType === "Repair" ? "#357a78" : "#8b5cf6" }}>Customer Return CRM</p>
           <h1 className="mt-2 text-2xl font-bold md:text-3xl">راه‌اندازی کسب‌وکار</h1>
           <p className="mt-2 text-sm leading-6 text-slate-500">اطلاعات اولیه را وارد کنید تا فضای کاری شما ساخته شود.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm md:p-7">
+        <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border bg-white p-5 shadow-sm md:p-7" style={{ borderColor: form.businessType === "Salon" ? "#e9e2e3" : "#e8e4eb" }}>
           <section>
             <h2 className="font-bold">اطلاعات کسب‌وکار</h2>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <Field label="نام کسب‌وکار" value={form.name} onChange={(value) => update("name", value)} required />
               <div>
                 <label className="text-sm font-medium">نوع کسب‌وکار</label>
-                <select value={form.businessType} onChange={(e) => update("businessType", e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-indigo-500" required>
+                <select value={form.businessType} onChange={(e) => update("businessType", e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none" style={{ borderColor: form.businessType === "Salon" ? "#e9b8c9" : "#d1d5db" }} required>
                   {businessTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
                 </select>
               </div>
@@ -148,7 +148,7 @@ export default function SetupPage() {
 
           {error && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
 
-          <button type="submit" disabled={submitting} className="w-full rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="submit" disabled={submitting} className="w-full rounded-xl px-4 py-3 font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50" style={{ background: form.businessType === "Salon" ? "#c94f79" : form.businessType === "Barbershop" ? "#8b5e83" : form.businessType === "Repair" ? "#357a78" : "#8b5cf6" }}>
             {submitting ? "در حال ایجاد..." : "ایجاد و ورود به پنل"}
           </button>
         </form>
