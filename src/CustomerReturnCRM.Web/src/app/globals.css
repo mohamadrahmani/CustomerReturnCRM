@@ -47,7 +47,7 @@ button, a, select { -webkit-tap-highlight-color: transparent; }
 }
 
 /* Industry-specific design tokens are applied at the authenticated app shell. */
-[data-industry="salon"] { --crm-accent: #c94f79; --crm-accent-strong: #a63d63; --crm-accent-soft: #f8e7ed; --crm-page: #faf6f2; --crm-surface: #fff; --crm-border: #e9e2e3; }
+[data-industry="salon"] { --crm-accent: #d9436f; --crm-accent-strong: #b92f59; --crm-accent-soft: #f8e2e9; --crm-page: #f4f0ec; --crm-surface: #fff; --crm-border: #dedbd8; }
 [data-industry="barbershop"] { --crm-accent: #8b5e83; --crm-accent-strong: #704765; --crm-accent-soft: #f0e8f0; --crm-page: #f7f5f7; --crm-surface: #fff; --crm-border: #e6e0e7; }
 [data-industry="repair"] { --crm-accent: #357a78; --crm-accent-strong: #286260; --crm-accent-soft: #e3f1f0; --crm-page: #f4f7f7; --crm-surface: #fff; --crm-border: #dfe8e7; }
 [data-industry="general"] { --crm-accent: #8b5cf6; --crm-accent-strong: #6d28d9; --crm-accent-soft: #ede9fe; --crm-page: #f7f7fb; --crm-surface: #fff; --crm-border: #e8e4eb; }
@@ -74,6 +74,19 @@ span[aria-hidden="true"].h-9.w-9.rounded-full::before {
   height: 100%;
   background: url("/images/customer-female-avatar.webp") center / 78% auto no-repeat;
 }
+
+/* Approved dashboard palette: dusty pink + warm cream + true neutral gray. */
+[data-industry] main.bg-gradient-to-b { background: var(--crm-page) !important; }
+[data-industry] .text-pink-600 { color: var(--crm-accent) !important; }
+[data-industry] .hover\\:text-pink-600:hover { color: var(--crm-accent-strong) !important; }
+[data-industry] .bg-pink-500 { background-color: var(--crm-accent) !important; }
+[data-industry] .from-pink-500 { --tw-gradient-from: var(--crm-accent) var(--tw-gradient-from-position) !important; --tw-gradient-to: rgb(217 67 111 / 0) var(--tw-gradient-to-position) !important; }
+[data-industry] .to-rose-500 { --tw-gradient-to: var(--crm-accent-strong) var(--tw-gradient-to-position) !important; }
+[data-industry] .border-pink-200 { border-color: color-mix(in srgb, var(--crm-accent) 24%, white) !important; }
+[data-industry] .hover\\:bg-pink-50\\/50:hover { background-color: color-mix(in srgb, var(--crm-accent-soft) 45%, white) !important; }
+[data-industry] .bg-rose-50, [data-industry] .bg-slate-50, [data-industry] .bg-slate-50\\/75 { background-color: #f0eeec !important; }
+[data-industry] .border-slate-100 { border-color: #e1dfdd !important; }
+[data-industry] .text-slate-500 { color: #6f6d6b; }
 
 /* Theme-aware navigation and shell surfaces. */
 [data-industry] aside.border-l { border-color: var(--crm-border); background: var(--crm-surface); }
